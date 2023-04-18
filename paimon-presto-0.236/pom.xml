@@ -32,6 +32,7 @@ under the License.
     <name>Paimon : Presto : 0.236</name>
 
     <properties>
+        <target.java.version>1.8</target.java.version>
         <presto.version>0.236</presto.version>
         <hadoop.apache2.version>2.7.4-9</hadoop.apache2.version>
         <slf4j.version>1.7.25</slf4j.version>
