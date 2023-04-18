@@ -18,13 +18,13 @@
 
 package org.apache.paimon.presto;
 
-import static java.util.Objects.requireNonNull;
-
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 import java.util.UUID;
+
+import static java.util.Objects.requireNonNull;
 
 /** Presto {@link ConnectorTransactionHandle}. */
 public class PrestoTransactionHandle implements ConnectorTransactionHandle {

@@ -18,13 +18,13 @@
 
 package org.apache.paimon.presto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.facebook.airlift.json.JsonCodec;
 import com.facebook.presto.common.predicate.TupleDomain;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** Test for {@link PrestoTableHandle}. */
 public class PrestoTableHandleTest {

@@ -18,7 +18,8 @@
 
 package org.apache.paimon.presto;
 
-import static java.util.Objects.requireNonNull;
+import org.apache.paimon.types.DataType;
+import org.apache.paimon.utils.JsonSerdeUtil;
 
 import com.facebook.presto.common.type.Type;
 import com.facebook.presto.common.type.TypeManager;
@@ -26,8 +27,8 @@ import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ColumnMetadata;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.paimon.types.DataType;
-import org.apache.paimon.utils.JsonSerdeUtil;
+
+import static java.util.Objects.requireNonNull;
 
 /** Presto {@link ColumnHandle}. */
 public class PrestoColumnHandle implements ColumnHandle {
@@ -47,7 +48,7 @@ public class PrestoColumnHandle implements ColumnHandle {
     }
 
     public static PrestoColumnHandle create(
-        String columnName, DataType columnType, TypeManager typeManager) {
+            String columnName, DataType columnType, TypeManager typeManager) {
         return new PrestoColumnHandle(
                 columnName,
                 JsonSerdeUtil.toJson(columnType),

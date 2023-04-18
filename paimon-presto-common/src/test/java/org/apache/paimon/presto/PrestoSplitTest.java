@@ -18,12 +18,12 @@
 
 package org.apache.paimon.presto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.facebook.airlift.json.JsonCodec;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** Test for {@link PrestoSplit}. */
 public class PrestoSplitTest {

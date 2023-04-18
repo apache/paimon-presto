@@ -18,15 +18,16 @@
 
 package org.apache.paimon.presto;
 
-import static java.util.Objects.requireNonNull;
+import org.apache.paimon.options.Options;
 
 import com.facebook.presto.spi.ConnectorHandleResolver;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorContext;
 import com.facebook.presto.spi.connector.ConnectorFactory;
-import org.apache.paimon.options.Options;
 
 import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
 
 /** Presto {@link ConnectorFactory}. */
 public class PrestoConnectorFactory implements ConnectorFactory {

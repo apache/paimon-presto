@@ -18,9 +18,6 @@
 
 package org.apache.paimon.presto;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.facebook.presto.spi.Plugin;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorFactory;
@@ -31,6 +28,9 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
+
+import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** Test for {@link PrestoPlugin}. */
 public class PrestoPluginTest {

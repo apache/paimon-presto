@@ -18,14 +18,6 @@
 
 package org.apache.paimon.presto;
 
-import static com.facebook.airlift.testing.Closeables.closeAllSuppress;
-import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
-import static org.apache.paimon.data.BinaryString.fromString;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.facebook.presto.testing.MaterializedResult;
-import com.facebook.presto.testing.QueryRunner;
-import com.facebook.presto.tests.DistributedQueryRunner;
 import org.apache.paimon.data.GenericMap;
 import org.apache.paimon.data.GenericRow;
 import org.apache.paimon.fs.Path;
@@ -44,6 +36,10 @@ import org.apache.paimon.types.MapType;
 import org.apache.paimon.types.RowKind;
 import org.apache.paimon.types.RowType;
 import org.apache.paimon.types.VarCharType;
+
+import com.facebook.presto.testing.MaterializedResult;
+import com.facebook.presto.testing.QueryRunner;
+import com.facebook.presto.tests.DistributedQueryRunner;
 import org.testng.annotations.Test;
 
 import java.nio.file.Files;
@@ -52,6 +48,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.facebook.airlift.testing.Closeables.closeAllSuppress;
+import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
+import static org.apache.paimon.data.BinaryString.fromString;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** ITCase for presto connector. */
 public class TestPrestoITCase {

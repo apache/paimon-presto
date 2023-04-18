@@ -18,11 +18,11 @@
 
 package org.apache.paimon.presto;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import org.apache.paimon.utils.InstantiationUtil;
 
 import java.util.Base64;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /** Utils for encoding. */
 public class EncodingUtils {

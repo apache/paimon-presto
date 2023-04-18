@@ -18,12 +18,13 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.table.source.Split;
+
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.HostAddress;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
-import org.apache.paimon.table.source.Split;
 
 import java.util.List;
 

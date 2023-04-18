@@ -18,17 +18,16 @@
 
 package org.apache.paimon.presto;
 
-import static com.facebook.presto.common.type.BigintType.BIGINT;
-import static com.facebook.presto.common.type.DateType.DATE;
-import static com.facebook.presto.common.type.Decimals.encodeShortScaledValue;
-import static com.facebook.presto.common.type.Decimals.isLongDecimal;
-import static com.facebook.presto.common.type.Decimals.isShortDecimal;
-import static com.facebook.presto.common.type.IntegerType.INTEGER;
-import static com.facebook.presto.common.type.TimeType.TIME;
-import static com.facebook.presto.common.type.TimestampType.TIMESTAMP;
-import static com.facebook.presto.spi.StandardErrorCode.GENERIC_INTERNAL_ERROR;
-import static io.airlift.slice.Slices.wrappedBuffer;
-import static java.lang.String.format;
+import org.apache.paimon.data.BinaryString;
+import org.apache.paimon.data.Decimal;
+import org.apache.paimon.data.InternalArray;
+import org.apache.paimon.data.InternalMap;
+import org.apache.paimon.data.InternalRow;
+import org.apache.paimon.data.Timestamp;
+import org.apache.paimon.reader.RecordReader;
+import org.apache.paimon.types.DataType;
+import org.apache.paimon.types.DataTypeChecks;
+import org.apache.paimon.utils.InternalRowUtils;
 
 import com.facebook.presto.common.Page;
 import com.facebook.presto.common.PageBuilder;
@@ -48,22 +47,24 @@ import com.facebook.presto.spi.ConnectorPageSource;
 import com.facebook.presto.spi.PrestoException;
 import com.google.common.base.Verify;
 import io.airlift.slice.Slice;
-import org.apache.paimon.data.BinaryString;
-import org.apache.paimon.data.Decimal;
-import org.apache.paimon.data.InternalArray;
-import org.apache.paimon.data.InternalMap;
-import org.apache.paimon.data.InternalRow;
-import org.apache.paimon.data.Timestamp;
-import org.apache.paimon.reader.RecordReader;
-import org.apache.paimon.types.DataType;
-import org.apache.paimon.types.DataTypeChecks;
-import org.apache.paimon.utils.InternalRowUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.facebook.presto.common.type.BigintType.BIGINT;
+import static com.facebook.presto.common.type.DateType.DATE;
+import static com.facebook.presto.common.type.Decimals.encodeShortScaledValue;
+import static com.facebook.presto.common.type.Decimals.isLongDecimal;
+import static com.facebook.presto.common.type.Decimals.isShortDecimal;
+import static com.facebook.presto.common.type.IntegerType.INTEGER;
+import static com.facebook.presto.common.type.TimeType.TIME;
+import static com.facebook.presto.common.type.TimestampType.TIMESTAMP;
+import static com.facebook.presto.spi.StandardErrorCode.GENERIC_INTERNAL_ERROR;
+import static io.airlift.slice.Slices.wrappedBuffer;
+import static java.lang.String.format;
 
 /** Presto {@link ConnectorPageSource}. */
 public abstract class PrestoPageSourceBase implements ConnectorPageSource {
@@ -76,7 +77,7 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
     private boolean isFinished = false;
 
     public PrestoPageSourceBase(
-        RecordReader<InternalRow> reader, List<ColumnHandle> projectedColumns) {
+            RecordReader<InternalRow> reader, List<ColumnHandle> projectedColumns) {
         this.reader = reader;
         this.prestoColumnTypes = new ArrayList<>();
         this.paimonColumnTypes = new ArrayList<>();
@@ -137,7 +138,7 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
                 appendTo(
                         prestoColumnTypes.get(i),
                         paimonColumnTypes.get(i),
-                    InternalRowUtils.get(row, i, paimonColumnTypes.get(i)),
+                        InternalRowUtils.get(row, i, paimonColumnTypes.get(i)),
                         output);
             }
         }
@@ -223,7 +224,7 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
     }
 
     private void writeBlock(
-        BlockBuilder output, Type prestoType, DataType paimonType, Object value) {
+            BlockBuilder output, Type prestoType, DataType paimonType, Object value) {
         if (prestoType instanceof ArrayType) {
             BlockBuilder builder = output.beginBlockEntry();
 
@@ -250,7 +251,7 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
                 appendTo(
                         fieldType,
                         fieldLogicalType,
-                    InternalRowUtils.get(rowData, index, fieldLogicalType),
+                        InternalRowUtils.get(rowData, index, fieldLogicalType),
                         builder);
             }
             output.closeEntry();
@@ -267,12 +268,12 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
                 appendTo(
                         prestoType.getTypeParameters().get(0),
                         keyType,
-                    InternalRowUtils.get(keyArray, i, keyType),
+                        InternalRowUtils.get(keyArray, i, keyType),
                         builder);
                 appendTo(
                         prestoType.getTypeParameters().get(1),
                         valueType,
-                    InternalRowUtils.get(valueArray, i, valueType),
+                        InternalRowUtils.get(valueArray, i, valueType),
                         builder);
             }
             output.closeEntry();

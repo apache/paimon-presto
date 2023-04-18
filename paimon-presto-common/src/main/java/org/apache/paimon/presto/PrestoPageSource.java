@@ -18,10 +18,11 @@
 
 package org.apache.paimon.presto;
 
-import com.facebook.presto.spi.ColumnHandle;
-import com.facebook.presto.spi.ConnectorPageSource;
 import org.apache.paimon.data.InternalRow;
 import org.apache.paimon.reader.RecordReader;
+
+import com.facebook.presto.spi.ColumnHandle;
+import com.facebook.presto.spi.ConnectorPageSource;
 
 import java.util.List;
 

@@ -18,8 +18,6 @@
 
 package org.apache.paimon.presto;
 
-import static org.apache.paimon.data.BinaryString.fromString;
-
 import org.apache.paimon.catalog.Catalog;
 import org.apache.paimon.catalog.CatalogContext;
 import org.apache.paimon.catalog.CatalogFactory;
@@ -41,6 +39,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.apache.paimon.data.BinaryString.fromString;
 
 /** presto test util. */
 public class TestPrestoUtils {

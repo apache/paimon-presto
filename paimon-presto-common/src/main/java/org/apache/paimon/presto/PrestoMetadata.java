@@ -18,11 +18,15 @@
 
 package org.apache.paimon.presto;
 
-import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.paimon.utils.Preconditions.checkArgument;
+import org.apache.paimon.CoreOptions;
+import org.apache.paimon.catalog.Catalog;
+import org.apache.paimon.catalog.CatalogContext;
+import org.apache.paimon.catalog.CatalogFactory;
+import org.apache.paimon.catalog.Identifier;
+import org.apache.paimon.options.Options;
+import org.apache.paimon.schema.Schema;
+import org.apache.paimon.utils.InstantiationUtil;
+import org.apache.paimon.utils.StringUtils;
 
 import com.facebook.presto.common.type.TypeManager;
 import com.facebook.presto.spi.ColumnHandle;
@@ -43,15 +47,6 @@ import com.facebook.presto.spi.connector.ConnectorOutputMetadata;
 import com.facebook.presto.spi.statistics.ComputedStatistics;
 import com.google.common.collect.ImmutableList;
 import io.airlift.slice.Slice;
-import org.apache.paimon.CoreOptions;
-import org.apache.paimon.catalog.Catalog;
-import org.apache.paimon.catalog.CatalogContext;
-import org.apache.paimon.catalog.CatalogFactory;
-import org.apache.paimon.catalog.Identifier;
-import org.apache.paimon.options.Options;
-import org.apache.paimon.schema.Schema;
-import org.apache.paimon.utils.InstantiationUtil;
-import org.apache.paimon.utils.StringUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -64,6 +59,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.paimon.utils.Preconditions.checkArgument;
 
 /** Presto {@link ConnectorMetadata}. */
 public class PrestoMetadata implements ConnectorMetadata {
