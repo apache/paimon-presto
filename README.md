@@ -2,6 +2,10 @@
 
 This repository is Presto Connector for the [Apache Paimon](https://paimon.apache.org/) project.
 
+## Version
+
+Paimon currently supports Presto 0.236 and above.
+
 ## Preparing Paimon Jar File
 
 {{< stable >}}
@@ -39,10 +43,6 @@ mvn clean install -DskipTests
 You can find Presto connector jar in `./paimon-presto/paimon-presto-<presto-version>/target/paimon-presto-*.jar`.
 
 Then, copy `paimon-presto-*.jar and flink-shaded-hadoop-*-uber-*.jar` to plugin/paimon.
-
-## Version
-
-Paimon currently supports Presto 0.236 and above.
 
 ## Configure Paimon Catalog
 
