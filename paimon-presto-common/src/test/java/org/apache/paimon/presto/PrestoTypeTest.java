@@ -18,8 +18,12 @@
 
 package org.apache.paimon.presto;
 
-import static com.facebook.presto.metadata.FunctionAndTypeManager.createTestFunctionAndTypeManager;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.paimon.types.DataField;
+import org.apache.paimon.types.DataType;
+import org.apache.paimon.types.DataTypes;
+import org.apache.paimon.types.IntType;
+import org.apache.paimon.types.TimeType;
+import org.apache.paimon.types.VarCharType;
 
 import com.facebook.presto.common.type.ArrayType;
 import com.facebook.presto.common.type.BigintType;
@@ -42,17 +46,14 @@ import com.facebook.presto.common.type.VarbinaryType;
 import com.facebook.presto.common.type.VarcharType;
 import com.facebook.presto.metadata.FunctionAndTypeManager;
 import com.google.common.collect.ImmutableList;
-import org.apache.paimon.types.DataField;
-import org.apache.paimon.types.DataType;
-import org.apache.paimon.types.DataTypes;
-import org.apache.paimon.types.IntType;
-import org.apache.paimon.types.TimeType;
-import org.apache.paimon.types.VarCharType;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static com.facebook.presto.metadata.FunctionAndTypeManager.createTestFunctionAndTypeManager;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** Test for {@link PrestoTypeUtils}. */
 public class PrestoTypeTest {

@@ -18,7 +18,9 @@
 
 package org.apache.paimon.presto;
 
-import static org.apache.paimon.presto.ClassLoaderUtils.runWithContextClassLoader;
+import org.apache.paimon.table.Table;
+import org.apache.paimon.table.source.ReadBuilder;
+import org.apache.paimon.types.RowType;
 
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorPageSource;
@@ -28,13 +30,12 @@ import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.facebook.presto.spi.SplitContext;
 import com.facebook.presto.spi.connector.ConnectorPageSourceProvider;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
-import org.apache.paimon.table.Table;
-import org.apache.paimon.table.source.ReadBuilder;
-import org.apache.paimon.types.RowType;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.apache.paimon.presto.ClassLoaderUtils.runWithContextClassLoader;
 
 /** Presto {@link ConnectorPageSourceProvider}. */
 public class PrestoPageSourceProvider implements ConnectorPageSourceProvider {

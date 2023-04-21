@@ -18,8 +18,6 @@
 
 package org.apache.paimon.presto;
 
-import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
-
 import com.facebook.airlift.log.Logger;
 import com.facebook.airlift.log.Logging;
 import com.facebook.presto.Session;
@@ -30,6 +28,8 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
 
 /** The query runner of presto. */
 public class PrestoQueryRunner {

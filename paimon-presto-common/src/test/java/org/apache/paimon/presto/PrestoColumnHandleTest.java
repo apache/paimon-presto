@@ -18,10 +18,8 @@
 
 package org.apache.paimon.presto;
 
-import static com.facebook.presto.common.type.StandardTypes.VARCHAR;
-import static com.facebook.presto.common.type.TypeSignature.parseTypeSignature;
-import static com.facebook.presto.metadata.FunctionAndTypeManager.createTestFunctionAndTypeManager;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.paimon.types.VarCharType;
+import org.apache.paimon.utils.JsonSerdeUtil;
 
 import com.facebook.airlift.json.JsonCodec;
 import com.facebook.airlift.json.JsonCodecFactory;
@@ -30,9 +28,12 @@ import com.facebook.airlift.json.ObjectMapperProvider;
 import com.facebook.presto.common.type.Type;
 import com.facebook.presto.type.TypeDeserializer;
 import com.google.common.collect.ImmutableMap;
-import org.apache.paimon.types.VarCharType;
-import org.apache.paimon.utils.JsonSerdeUtil;
 import org.junit.jupiter.api.Test;
+
+import static com.facebook.presto.common.type.StandardTypes.VARCHAR;
+import static com.facebook.presto.common.type.TypeSignature.parseTypeSignature;
+import static com.facebook.presto.metadata.FunctionAndTypeManager.createTestFunctionAndTypeManager;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** Test for {@link PrestoColumnHandle}. */
 public class PrestoColumnHandleTest {

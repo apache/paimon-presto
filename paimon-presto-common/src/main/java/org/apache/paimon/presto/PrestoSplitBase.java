@@ -18,15 +18,16 @@
 
 package org.apache.paimon.presto;
 
-import static com.facebook.presto.spi.schedule.NodeSelectionStrategy.NO_PREFERENCE;
+import org.apache.paimon.table.source.Split;
 
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.schedule.NodeSelectionStrategy;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.paimon.table.source.Split;
 
 import java.util.Collections;
+
+import static com.facebook.presto.spi.schedule.NodeSelectionStrategy.NO_PREFERENCE;
 
 /** Presto {@link ConnectorSplit}. */
 public abstract class PrestoSplitBase implements ConnectorSplit {

@@ -18,9 +18,10 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.options.Options;
+
 import com.facebook.presto.common.type.TypeManager;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
-import org.apache.paimon.options.Options;
 
 /** Presto MetadataFactory. */
 public class PrestoMetadataFactory {

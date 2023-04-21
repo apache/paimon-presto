@@ -18,22 +18,6 @@
 
 package org.apache.paimon.presto;
 
-import static java.lang.String.format;
-
-import com.facebook.presto.common.type.BigintType;
-import com.facebook.presto.common.type.IntegerType;
-import com.facebook.presto.common.type.RealType;
-import com.facebook.presto.common.type.SmallintType;
-import com.facebook.presto.common.type.StandardTypes;
-import com.facebook.presto.common.type.TimestampWithTimeZoneType;
-import com.facebook.presto.common.type.TinyintType;
-import com.facebook.presto.common.type.Type;
-import com.facebook.presto.common.type.TypeManager;
-import com.facebook.presto.common.type.TypeSignature;
-import com.facebook.presto.common.type.TypeSignatureParameter;
-import com.facebook.presto.common.type.VarbinaryType;
-import com.facebook.presto.common.type.VarcharType;
-import com.google.common.collect.ImmutableList;
 import org.apache.paimon.types.ArrayType;
 import org.apache.paimon.types.BigIntType;
 import org.apache.paimon.types.BinaryType;
@@ -57,10 +41,27 @@ import org.apache.paimon.types.TinyIntType;
 import org.apache.paimon.types.VarBinaryType;
 import org.apache.paimon.types.VarCharType;
 
+import com.facebook.presto.common.type.BigintType;
+import com.facebook.presto.common.type.IntegerType;
+import com.facebook.presto.common.type.RealType;
+import com.facebook.presto.common.type.SmallintType;
+import com.facebook.presto.common.type.StandardTypes;
+import com.facebook.presto.common.type.TimestampWithTimeZoneType;
+import com.facebook.presto.common.type.TinyintType;
+import com.facebook.presto.common.type.Type;
+import com.facebook.presto.common.type.TypeManager;
+import com.facebook.presto.common.type.TypeSignature;
+import com.facebook.presto.common.type.TypeSignatureParameter;
+import com.facebook.presto.common.type.VarbinaryType;
+import com.facebook.presto.common.type.VarcharType;
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 /** Presto type from Paimon Type. */
 public class PrestoTypeUtils {

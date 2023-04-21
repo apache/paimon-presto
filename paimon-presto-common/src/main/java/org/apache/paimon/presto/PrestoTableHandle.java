@@ -18,6 +18,9 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.table.Table;
+import org.apache.paimon.utils.InstantiationUtil;
+
 import com.facebook.presto.common.predicate.TupleDomain;
 import com.facebook.presto.common.type.TypeManager;
 import com.facebook.presto.spi.ColumnHandle;
@@ -27,8 +30,6 @@ import com.facebook.presto.spi.ConnectorTableMetadata;
 import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.paimon.table.Table;
-import org.apache.paimon.utils.InstantiationUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
