@@ -25,6 +25,7 @@ import org.apache.paimon.catalog.CatalogFactory;
 import org.apache.paimon.catalog.Identifier;
 import org.apache.paimon.options.Options;
 import org.apache.paimon.schema.Schema;
+import org.apache.paimon.security.SecurityContext;
 import org.apache.paimon.utils.InstantiationUtil;
 import org.apache.paimon.utils.StringUtils;
 
@@ -73,6 +74,11 @@ public class PrestoMetadata implements ConnectorMetadata {
     private final TypeManager typeManager;
 
     public PrestoMetadata(Options catalogOptions, TypeManager typeManager) {
+        try {
+            SecurityContext.install(catalogOptions);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         this.catalog = CatalogFactory.createCatalog(CatalogContext.create(catalogOptions));
         this.typeManager = typeManager;
     }
