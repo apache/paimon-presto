@@ -311,7 +311,8 @@ public class PrestoMetadata implements ConnectorMetadata {
     }
 
     @Override
-    public void addColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnMetadata column) {
+    public void addColumn(
+            ConnectorSession session, ConnectorTableHandle tableHandle, ColumnMetadata column) {
         PrestoTableHandle trinoTableHandle = (PrestoTableHandle) tableHandle;
         Identifier identifier =
                 new Identifier(trinoTableHandle.getSchemaName(), trinoTableHandle.getTableName());
@@ -328,7 +329,11 @@ public class PrestoMetadata implements ConnectorMetadata {
     }
 
     @Override
-    public void renameColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle source, String target) {
+    public void renameColumn(
+            ConnectorSession session,
+            ConnectorTableHandle tableHandle,
+            ColumnHandle source,
+            String target) {
         PrestoTableHandle trinoTableHandle = (PrestoTableHandle) tableHandle;
         Identifier identifier =
                 new Identifier(trinoTableHandle.getSchemaName(), trinoTableHandle.getTableName());
@@ -344,7 +349,8 @@ public class PrestoMetadata implements ConnectorMetadata {
     }
 
     @Override
-    public void dropColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle column) {
+    public void dropColumn(
+            ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle column) {
         PrestoTableHandle trinoTableHandle = (PrestoTableHandle) tableHandle;
         Identifier identifier =
                 new Identifier(trinoTableHandle.getSchemaName(), trinoTableHandle.getTableName());

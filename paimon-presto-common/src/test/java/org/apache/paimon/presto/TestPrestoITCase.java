@@ -18,7 +18,6 @@
 
 package org.apache.paimon.presto;
 
-import com.facebook.presto.tests.AbstractTestQueryFramework;
 import org.apache.paimon.data.GenericMap;
 import org.apache.paimon.data.GenericRow;
 import org.apache.paimon.fs.Path;
@@ -40,6 +39,7 @@ import org.apache.paimon.types.VarCharType;
 
 import com.facebook.presto.testing.MaterializedResult;
 import com.facebook.presto.testing.QueryRunner;
+import com.facebook.presto.tests.AbstractTestQueryFramework;
 import com.facebook.presto.tests.DistributedQueryRunner;
 import org.testng.annotations.Test;
 
