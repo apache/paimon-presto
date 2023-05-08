@@ -18,13 +18,13 @@
 
 package org.apache.paimon.presto;
 
-import org.apache.paimon.CoreOptions;
 import org.apache.paimon.catalog.Catalog;
 import org.apache.paimon.catalog.CatalogContext;
 import org.apache.paimon.catalog.CatalogFactory;
 import org.apache.paimon.catalog.Identifier;
 import org.apache.paimon.options.Options;
 import org.apache.paimon.schema.Schema;
+import org.apache.paimon.schema.SchemaChange;
 import org.apache.paimon.security.SecurityContext;
 import org.apache.paimon.utils.InstantiationUtil;
 import org.apache.paimon.utils.StringUtils;
@@ -242,12 +242,12 @@ public class PrestoMetadata implements ConnectorMetadata {
         return Optional.empty();
     }
 
-    // TODO: options is not set
     private Schema prepareSchema(ConnectorTableMetadata tableMetadata) {
+        Map<String, Object> properties = new HashMap<>(tableMetadata.getProperties());
         Schema.Builder builder =
                 Schema.newBuilder()
-                        .primaryKey(getPrimaryKeys(tableMetadata.getProperties()))
-                        .partitionKeys(getPartitionedKeys(tableMetadata.getProperties()));
+                        .primaryKey(PrestoTableOptions.getPrimaryKeys(properties))
+                        .partitionKeys(PrestoTableOptions.getPartitionedKeys(properties));
 
         for (ColumnMetadata column : tableMetadata.getColumns()) {
             builder.column(
@@ -255,19 +255,10 @@ public class PrestoMetadata implements ConnectorMetadata {
                     PrestoTypeUtils.toPaimonType(column.getType()),
                     column.getComment());
         }
+
+        PrestoTableOptionUtils.buildOptions(builder, properties);
+
         return builder.build();
-    }
-
-    private List<String> getPartitionedKeys(Map<String, Object> tableProperties) {
-        List<String> partitionedKeys =
-                (List<String>) tableProperties.get(CoreOptions.PARTITION.key());
-        return partitionedKeys == null ? ImmutableList.of() : ImmutableList.copyOf(partitionedKeys);
-    }
-
-    private List<String> getPrimaryKeys(Map<String, Object> tableProperties) {
-        List<String> primaryKeys =
-                (List<String>) tableProperties.get(CoreOptions.PRIMARY_KEY.key());
-        return primaryKeys == null ? ImmutableList.of() : ImmutableList.copyOf(primaryKeys);
     }
 
     @Override
@@ -317,5 +308,54 @@ public class PrestoMetadata implements ConnectorMetadata {
                                 table ->
                                         getTableHandle(session, table)
                                                 .columnMetadatas(typeManager)));
+    }
+
+    @Override
+    public void addColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnMetadata column) {
+        PrestoTableHandle trinoTableHandle = (PrestoTableHandle) tableHandle;
+        Identifier identifier =
+                new Identifier(trinoTableHandle.getSchemaName(), trinoTableHandle.getTableName());
+        List<SchemaChange> changes = new ArrayList<>();
+        changes.add(
+                SchemaChange.addColumn(
+                        column.getName(), PrestoTypeUtils.toPaimonType(column.getType())));
+        try {
+            catalog.alterTable(identifier, changes, false);
+        } catch (Catalog.TableNotExistException e) {
+            throw new RuntimeException(
+                    format("table not exists: '%s'", trinoTableHandle.getTableName()));
+        }
+    }
+
+    @Override
+    public void renameColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle source, String target) {
+        PrestoTableHandle trinoTableHandle = (PrestoTableHandle) tableHandle;
+        Identifier identifier =
+                new Identifier(trinoTableHandle.getSchemaName(), trinoTableHandle.getTableName());
+        PrestoColumnHandle trinoColumnHandle = (PrestoColumnHandle) source;
+        List<SchemaChange> changes = new ArrayList<>();
+        changes.add(SchemaChange.renameColumn(trinoColumnHandle.getColumnName(), target));
+        try {
+            catalog.alterTable(identifier, changes, false);
+        } catch (Catalog.TableNotExistException e) {
+            throw new RuntimeException(
+                    format("table not exists: '%s'", trinoTableHandle.getTableName()));
+        }
+    }
+
+    @Override
+    public void dropColumn(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle column) {
+        PrestoTableHandle trinoTableHandle = (PrestoTableHandle) tableHandle;
+        Identifier identifier =
+                new Identifier(trinoTableHandle.getSchemaName(), trinoTableHandle.getTableName());
+        PrestoColumnHandle trinoColumnHandle = (PrestoColumnHandle) column;
+        List<SchemaChange> changes = new ArrayList<>();
+        changes.add(SchemaChange.dropColumn(trinoColumnHandle.getColumnName()));
+        try {
+            catalog.alterTable(identifier, changes, false);
+        } catch (Catalog.TableNotExistException e) {
+            throw new RuntimeException(
+                    format("table not exists: '%s'", trinoTableHandle.getTableName()));
+        }
     }
 }

@@ -25,10 +25,14 @@ import com.facebook.presto.spi.connector.ConnectorPageSourceProvider;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorMetadata;
+import com.facebook.presto.spi.session.PropertyMetadata;
 import com.facebook.presto.spi.transaction.IsolationLevel;
+
+import java.util.List;
 
 import static com.facebook.presto.spi.transaction.IsolationLevel.READ_COMMITTED;
 import static com.facebook.presto.spi.transaction.IsolationLevel.checkConnectorSupports;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 
 /** Presto {@link Connector}. */
@@ -38,6 +42,8 @@ public abstract class PrestoConnectorBase implements Connector {
     private final PrestoSplitManager prestoSplitManager;
     private final PrestoPageSourceProvider prestoPageSourceProvider;
     private final PrestoMetadataFactory prestoMetadataFactory;
+
+    private final List<PropertyMetadata<?>> tableProperties;
 
     public PrestoConnectorBase(
             PrestoTransactionManager transactionManager,
@@ -50,6 +56,8 @@ public abstract class PrestoConnectorBase implements Connector {
                 requireNonNull(prestoPageSourceProvider, "prestoPageSourceProvider is null");
         this.prestoMetadataFactory =
                 requireNonNull(prestoMetadataFactory, "prestoMetadataFactory is null");
+        tableProperties =
+                new PrestoTableOptions().getTableProperties().stream().collect(toImmutableList());
     }
 
     @Override
@@ -83,5 +91,10 @@ public abstract class PrestoConnectorBase implements Connector {
     @Override
     public void rollback(ConnectorTransactionHandle transaction) {
         transactionManager.remove(transaction);
+    }
+
+    @Override
+    public List<PropertyMetadata<?>> getTableProperties() {
+        return tableProperties;
     }
 }

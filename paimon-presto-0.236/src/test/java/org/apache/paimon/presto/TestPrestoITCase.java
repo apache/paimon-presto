@@ -18,6 +18,10 @@
 
 package org.apache.paimon.presto;
 
+import com.facebook.presto.testing.MaterializedResult;
+import com.facebook.presto.testing.QueryRunner;
+import com.facebook.presto.tests.AbstractTestQueryFramework;
+import com.facebook.presto.tests.DistributedQueryRunner;
 import org.apache.paimon.data.GenericMap;
 import org.apache.paimon.data.GenericRow;
 import org.apache.paimon.fs.Path;
@@ -36,10 +40,6 @@ import org.apache.paimon.types.MapType;
 import org.apache.paimon.types.RowKind;
 import org.apache.paimon.types.RowType;
 import org.apache.paimon.types.VarCharType;
-
-import com.facebook.presto.testing.MaterializedResult;
-import com.facebook.presto.testing.QueryRunner;
-import com.facebook.presto.tests.DistributedQueryRunner;
 import org.testng.annotations.Test;
 
 import java.nio.file.Files;
@@ -206,6 +206,25 @@ public class TestPrestoITCase {
                         sql(
                                 "SELECT pt, a, SUM(b), SUM(d) FROM paimon.default.t3 GROUP BY pt, a ORDER BY pt, a"))
                 .isEqualTo("[[1, 1, 3, 3], [2, 3, 3, 3]]");
+    }
+
+    @Test
+    public void testCreateTable() throws Exception {
+        sql(
+                "CREATE TABLE orders ("
+                        + "  order_key bigint,"
+                        + "  order_status varchar,"
+                        + "  total_price double,"
+                        + "  order_date date"
+                        + ")"
+                        + "WITH ("
+                        + "file_format = 'ORC',"
+                        + "primary_key = ARRAY['order_key','order_date'],"
+                        + "partitioned_by = ARRAY['order_date'],"
+                        + "bucket = '2',"
+                        + "bucket_key = 'order_key',"
+                        + "changelog_producer = 'input'"
+                        + ")");
     }
 
     private String sql(String sql) throws Exception {

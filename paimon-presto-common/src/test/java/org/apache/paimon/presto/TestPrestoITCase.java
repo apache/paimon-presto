@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import com.facebook.presto.tests.AbstractTestQueryFramework;
 import org.apache.paimon.data.GenericMap;
 import org.apache.paimon.data.GenericRow;
 import org.apache.paimon.fs.Path;
@@ -55,7 +56,7 @@ import static org.apache.paimon.data.BinaryString.fromString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** ITCase for presto connector. */
-public class TestPrestoITCase {
+public class TestPrestoITCase extends AbstractTestQueryFramework {
 
     private static final String CATALOG = "paimon";
     private static final String DB = "default";
@@ -174,12 +175,12 @@ public class TestPrestoITCase {
     }
 
     @Test
-    public void testComplexTypes() throws Exception {
+    public void testComplexTypes() {
         assertThat(sql("SELECT * FROM paimon.default.t4")).isEqualTo("[[1, {1=2}]]");
     }
 
     @Test
-    public void testSystemTable() throws Exception {
+    public void testSystemTable() {
         assertThat(
                         sql(
                                 "SELECT snapshot_id,schema_id,commit_user,commit_identifier,commit_kind FROM \"t1$snapshots\""))
@@ -187,7 +188,7 @@ public class TestPrestoITCase {
     }
 
     @Test
-    public void testProjection() throws Exception {
+    public void testProjection() {
         assertThat(sql("SELECT * FROM paimon.default.t1"))
                 .isEqualTo("[[1, 2, 1, 1], [5, 6, 3, 3]]");
         assertThat(sql("SELECT a, aCa FROM paimon.default.t1")).isEqualTo("[[1, 1], [5, 3]]");
@@ -195,21 +196,172 @@ public class TestPrestoITCase {
     }
 
     @Test
-    public void testFilter() throws Exception {
+    public void testFilter() {
         assertThat(sql("SELECT a, aCa FROM paimon.default.t2 WHERE a < 4"))
                 .isEqualTo("[[1, 1], [3, 2]]");
     }
 
     @Test
-    public void testGroupByWithCast() throws Exception {
+    public void testGroupByWithCast() {
         assertThat(
                         sql(
                                 "SELECT pt, a, SUM(b), SUM(d) FROM paimon.default.t3 GROUP BY pt, a ORDER BY pt, a"))
                 .isEqualTo("[[1, 1, 3, 3], [2, 3, 3, 3]]");
     }
 
-    private String sql(String sql) throws Exception {
-        MaterializedResult result = createQueryRunner().execute(sql);
+    @Test
+    public void testCreateSchema() {
+        sql("CREATE SCHEMA paimon.test");
+        assertThat(sql("SHOW SCHEMAS FROM paimon"))
+                .isEqualTo("[[default], [information_schema], [test]]");
+        sql("DROP SCHEMA paimon.test");
+    }
+
+    @Test
+    public void testDropSchema() {
+        sql("CREATE SCHEMA paimon.tpch");
+        sql("DROP SCHEMA paimon.tpch");
+        assertThat(sql("SHOW SCHEMAS FROM paimon")).isEqualTo("[[default], [information_schema]]");
+    }
+
+    @Test
+    public void testCreateTable() {
+        sql(
+                "CREATE TABLE orders ("
+                        + "  order_key bigint,"
+                        + "  order_status varchar,"
+                        + "  total_price double,"
+                        + "  order_date date"
+                        + ")"
+                        + "WITH ("
+                        + "file_format = 'ORC',"
+                        + "primary_key = ARRAY['order_key','order_date'],"
+                        + "partitioned_by = ARRAY['order_date'],"
+                        + "bucket = '2',"
+                        + "bucket_key = 'order_key',"
+                        + "changelog_producer = 'input'"
+                        + ")");
+        assertThat(sql("SHOW TABLES FROM paimon.default"))
+                .isEqualTo("[[orders], [t1], [t2], [t3], [t4]]");
+        sql("DROP TABLE IF EXISTS paimon.default.orders");
+    }
+
+    @Test
+    public void testRenameTable() {
+        sql(
+                "CREATE TABLE t5 ("
+                        + "  order_key bigint,"
+                        + "  order_status varchar,"
+                        + "  total_price double,"
+                        + "  order_date date"
+                        + ")"
+                        + "WITH ("
+                        + "file_format = 'ORC',"
+                        + "primary_key = ARRAY['order_key','order_date'],"
+                        + "partitioned_by = ARRAY['order_date'],"
+                        + "bucket = '2',"
+                        + "bucket_key = 'order_key',"
+                        + "changelog_producer = 'input'"
+                        + ")");
+        sql("ALTER TABLE paimon.default.t5 RENAME TO t6");
+        sql("DROP TABLE IF EXISTS paimon.default.t5");
+    }
+
+    @Test
+    public void testDropTable() {
+        sql(
+                "CREATE TABLE t5 ("
+                        + "  order_key bigint,"
+                        + "  order_status varchar,"
+                        + "  total_price double,"
+                        + "  order_date date"
+                        + ")"
+                        + "WITH ("
+                        + "file_format = 'ORC',"
+                        + "primary_key = ARRAY['order_key','order_date'],"
+                        + "partitioned_by = ARRAY['order_date'],"
+                        + "bucket = '2',"
+                        + "bucket_key = 'order_key',"
+                        + "changelog_producer = 'input'"
+                        + ")");
+        sql("DROP TABLE IF EXISTS paimon.default.t5");
+        assertThat(sql("SHOW TABLES FROM paimon.default")).isEqualTo("[[t1], [t2], [t3], [t4]]");
+    }
+
+    @Test
+    public void testAddColumn() {
+        sql(
+                "CREATE TABLE t5 ("
+                        + "  order_key bigint,"
+                        + "  order_status varchar,"
+                        + "  total_price double,"
+                        + "  order_date date"
+                        + ")"
+                        + "WITH ("
+                        + "file_format = 'ORC',"
+                        + "primary_key = ARRAY['order_key','order_date'],"
+                        + "partitioned_by = ARRAY['order_date'],"
+                        + "bucket = '2',"
+                        + "bucket_key = 'order_key',"
+                        + "changelog_producer = 'input'"
+                        + ")");
+        sql("ALTER TABLE paimon.default.t5 ADD COLUMN zip varchar");
+        assertThat(sql("SHOW COLUMNS FROM paimon.default.t5"))
+                .isEqualTo(
+                        "[[order_key, bigint, , ], [order_status, varchar, , ], [total_price, double, , ], [order_date, date, , ], [zip, varchar, , ]]");
+        sql("DROP TABLE IF EXISTS paimon.default.t5");
+    }
+
+    @Test
+    public void testRenameColumn() {
+        sql(
+                "CREATE TABLE t5 ("
+                        + "  order_key bigint,"
+                        + "  order_status varchar,"
+                        + "  total_price double,"
+                        + "  order_date date"
+                        + ")"
+                        + "WITH ("
+                        + "file_format = 'ORC',"
+                        + "primary_key = ARRAY['order_key','order_date'],"
+                        + "partitioned_by = ARRAY['order_date'],"
+                        + "bucket = '2',"
+                        + "bucket_key = 'order_key',"
+                        + "changelog_producer = 'input'"
+                        + ")");
+        sql("ALTER TABLE paimon.default.t5 RENAME COLUMN order_status to g");
+        assertThat(sql("SHOW COLUMNS FROM paimon.default.t5"))
+                .isEqualTo(
+                        "[[order_key, bigint, , ], [g, varchar, , ], [total_price, double, , ], [order_date, date, , ]]");
+        sql("DROP TABLE IF EXISTS paimon.default.t5");
+    }
+
+    @Test
+    public void testDropColumn() {
+        sql(
+                "CREATE TABLE t5 ("
+                        + "  order_key bigint,"
+                        + "  order_status varchar,"
+                        + "  total_price double,"
+                        + "  order_date date"
+                        + ")"
+                        + "WITH ("
+                        + "file_format = 'ORC',"
+                        + "primary_key = ARRAY['order_key','order_date'],"
+                        + "partitioned_by = ARRAY['order_date'],"
+                        + "bucket = '2',"
+                        + "bucket_key = 'order_key',"
+                        + "changelog_producer = 'input'"
+                        + ")");
+        sql("ALTER TABLE paimon.default.t5 DROP COLUMN order_status");
+        assertThat(sql("SHOW COLUMNS FROM paimon.default.t5"))
+                .isEqualTo(
+                        "[[order_key, bigint, , ], [total_price, double, , ], [order_date, date, , ]]");
+        sql("DROP TABLE IF EXISTS paimon.default.t5");
+    }
+
+    private String sql(String sql) {
+        MaterializedResult result = getQueryRunner().execute(sql);
         return result.getMaterializedRows().toString();
     }
 }
