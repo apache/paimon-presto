@@ -38,7 +38,7 @@ under the License.
     <groupId>org.apache.paimon</groupId>
     <artifactId>paimon-presto</artifactId>
     <name>Paimon : Presto</name>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.5-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
