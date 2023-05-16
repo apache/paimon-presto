@@ -33,7 +33,6 @@ under the License.
     <artifactId>paimon-presto-common</artifactId>
     <name>Paimon : Presto : Common</name>
 
-
     <properties>
         <presto.version>0.273</presto.version>
         <hadoop.apache2.version>2.7.4-9</hadoop.apache2.version>
@@ -116,6 +115,25 @@ under the License.
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>${maven.toolchains.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>${jdk.test.version}</version>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

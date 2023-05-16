@@ -27,6 +27,7 @@ under the License.
         <module>paimon-presto-0.273</module>
         <module>paimon-presto-0.268</module>
         <module>paimon-presto-0.236</module>
+        <module>paimon-prestosql-332</module>
     </modules>
 
     <parent>
