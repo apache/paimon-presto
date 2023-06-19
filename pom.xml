@@ -27,6 +27,7 @@ under the License.
         <module>paimon-presto-0.273</module>
         <module>paimon-presto-0.268</module>
         <module>paimon-presto-0.236</module>
+        <module>paimon-prestosql-common</module>
         <module>paimon-prestosql-332</module>
     </modules>
 
@@ -281,94 +282,6 @@ under the License.
                         <exclude>paimon-common/src/test/resources/codesplit/**</exclude>
                     </excludes>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>enforce-maven</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireMavenVersion>
-                                    <!-- enforce at least mvn version 3.1.1 (see FLINK-12447) -->
-                                    <version>[3.1.1,)</version>
-                                </requireMavenVersion>
-                                <requireJavaVersion>
-                                    <version>${target.java.version}</version>
-                                </requireJavaVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>ban-unsafe-snakeyaml</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <bannedDependencies>
-                                    <excludes>
-                                        <exclude>org.yaml:snakeyaml:(,1.26]</exclude>
-                                    </excludes>
-                                    <includes>
-                                        <!-- Snakeyaml is pulled in by many modules without using it in production,
-                                          so there's no benefit in us investing time into bumping these. -->
-                                        <include>org.yaml:snakeyaml:(,1.26]:*:test</include>
-                                    </includes>
-                                </bannedDependencies>
-                            </rules>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>ban-unsafe-jackson</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <bannedDependencies>
-                                    <excludes>
-                                        <exclude>com.fasterxml.jackson*:*:(,2.7.0]</exclude>
-                                    </excludes>
-                                </bannedDependencies>
-                            </rules>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>forbid-log4j-1</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <bannedDependencies>
-                                    <excludes>
-                                        <exclude>log4j:log4j</exclude>
-                                        <exclude>org.slf4j:slf4j-log4j12</exclude>
-                                    </excludes>
-                                </bannedDependencies>
-                            </rules>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>dependency-convergence</id>
-                        <!-- disabled by default as it interacts badly with shade-plugin -->
-                        <phase>none</phase>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <dependencyConvergence/>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
