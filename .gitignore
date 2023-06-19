@@ -17,3 +17,4 @@ target
 *.ipr
 *.iws
 dependency-reduced-pom.xml
+*.dependency-reduced-pom.xml
