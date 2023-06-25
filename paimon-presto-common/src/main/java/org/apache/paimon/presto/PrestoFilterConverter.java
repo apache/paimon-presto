@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.data.BinaryString;
 import org.apache.paimon.predicate.Predicate;
 import org.apache.paimon.predicate.PredicateBuilder;
 import org.apache.paimon.types.RowType;
@@ -28,6 +29,7 @@ import com.facebook.presto.common.predicate.TupleDomain;
 import com.facebook.presto.common.type.ArrayType;
 import com.facebook.presto.common.type.BigintType;
 import com.facebook.presto.common.type.BooleanType;
+import com.facebook.presto.common.type.CharType;
 import com.facebook.presto.common.type.DateType;
 import com.facebook.presto.common.type.DecimalType;
 import com.facebook.presto.common.type.Decimals;
@@ -210,8 +212,8 @@ public class PrestoFilterConverter {
             return TimeUnit.MILLISECONDS.toMicros((Long) prestoNativeValue);
         }
 
-        if (type instanceof VarcharType) {
-            return ((Slice) prestoNativeValue).toStringUtf8();
+        if (type instanceof VarcharType || type instanceof CharType) {
+            return BinaryString.fromBytes(((Slice) prestoNativeValue).getBytes());
         }
 
         if (type instanceof VarbinaryType) {

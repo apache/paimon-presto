@@ -33,6 +33,7 @@ import io.prestosql.spi.predicate.TupleDomain;
 import io.prestosql.spi.type.ArrayType;
 import io.prestosql.spi.type.BigintType;
 import io.prestosql.spi.type.BooleanType;
+import io.prestosql.spi.type.CharType;
 import io.prestosql.spi.type.DateType;
 import io.prestosql.spi.type.DecimalType;
 import io.prestosql.spi.type.DoubleType;
@@ -229,7 +230,7 @@ public class PrestoSqlFilterConverter {
             return Timestamp.fromEpochMillis(unpackMillisUtc((Long) prestosqlNativeValue));
         }
 
-        if (type instanceof VarcharType) {
+        if (type instanceof VarcharType || type instanceof CharType) {
             return BinaryString.fromBytes(((Slice) prestosqlNativeValue).getBytes());
         }
 

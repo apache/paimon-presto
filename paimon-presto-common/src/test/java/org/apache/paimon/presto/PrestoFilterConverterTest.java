@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.data.BinaryString;
 import org.apache.paimon.predicate.Predicate;
 import org.apache.paimon.predicate.PredicateBuilder;
 import org.apache.paimon.types.DataField;
@@ -28,7 +29,9 @@ import com.facebook.presto.common.predicate.Domain;
 import com.facebook.presto.common.predicate.Range;
 import com.facebook.presto.common.predicate.TupleDomain;
 import com.facebook.presto.common.predicate.ValueSet;
+import com.facebook.presto.common.type.CharType;
 import com.google.common.collect.ImmutableMap;
+import io.airlift.slice.Slices;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -119,5 +122,31 @@ public class PrestoFilterConverterTest {
         Predicate expectedIn = builder.in(0, Arrays.asList(1, 2, 3));
         Predicate actualIn = converter.convert(in).get();
         assertThat(actualIn).isEqualTo(expectedIn);
+    }
+
+    @Test
+    public void testCharType() {
+        RowType rowType =
+                new RowType(
+                        Collections.singletonList(
+                                new DataField(
+                                        0, "date", new org.apache.paimon.types.CharType(10))));
+        PrestoFilterConverter converter = new PrestoFilterConverter(rowType);
+        PredicateBuilder builder = new PredicateBuilder(rowType);
+        PrestoColumnHandle dateColumn =
+                PrestoColumnHandle.create(
+                        "date",
+                        new org.apache.paimon.types.CharType(10),
+                        createTestFunctionAndTypeManager());
+        TupleDomain<PrestoColumnHandle> eq =
+                TupleDomain.withColumnDomains(
+                        ImmutableMap.of(
+                                dateColumn,
+                                Domain.singleValue(
+                                        CharType.createCharType(10),
+                                        Slices.utf8Slice("2020-11-11"))));
+        Predicate expectedEqq = builder.equal(0, BinaryString.fromString("2020-11-11"));
+        Predicate actualEqq = converter.convert(eq).get();
+        assertThat(actualEqq).isEqualTo(expectedEqq);
     }
 }
