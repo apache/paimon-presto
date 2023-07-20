@@ -60,8 +60,11 @@ import static com.facebook.presto.common.type.Decimals.encodeShortScaledValue;
 import static com.facebook.presto.common.type.Decimals.isLongDecimal;
 import static com.facebook.presto.common.type.Decimals.isShortDecimal;
 import static com.facebook.presto.common.type.IntegerType.INTEGER;
+import static com.facebook.presto.common.type.RealType.REAL;
+import static com.facebook.presto.common.type.SmallintType.SMALLINT;
 import static com.facebook.presto.common.type.TimeType.TIME;
 import static com.facebook.presto.common.type.TimestampType.TIMESTAMP;
+import static com.facebook.presto.common.type.TinyintType.TINYINT;
 import static com.facebook.presto.spi.StandardErrorCode.GENERIC_INTERNAL_ERROR;
 import static io.airlift.slice.Slices.wrappedBuffer;
 import static java.lang.String.format;
@@ -163,18 +166,20 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
         if (javaType == boolean.class) {
             prestoType.writeBoolean(output, (Boolean) value);
         } else if (javaType == long.class) {
-            if (prestoType.equals(BIGINT)) {
+            if (prestoType.equals(BIGINT)
+                    || prestoType.equals(INTEGER)
+                    || prestoType.equals(TINYINT)
+                    || prestoType.equals(SMALLINT)
+                    || prestoType.equals(DATE)) {
                 prestoType.writeLong(output, ((Number) value).longValue());
-            } else if (prestoType.equals(INTEGER)) {
-                prestoType.writeLong(output, ((Number) value).intValue());
+            } else if (prestoType.equals(REAL)) {
+                prestoType.writeLong(output, Float.floatToIntBits((Float) value));
             } else if (prestoType instanceof DecimalType) {
                 Verify.verify(isShortDecimal(prestoType), "The type should be short decimal");
                 DecimalType decimalType = (DecimalType) prestoType;
                 BigDecimal decimal = ((Decimal) value).toBigDecimal();
                 prestoType.writeLong(
                         output, encodeShortScaledValue(decimal, decimalType.getScale()));
-            } else if (prestoType.equals(DATE)) {
-                prestoType.writeLong(output, (int) value);
             } else if (prestoType.equals(TIMESTAMP)) {
                 prestoType.writeLong(output, ((Timestamp) value).getMillisecond() * 1_000);
             } else if (prestoType.equals(TIME)) {
