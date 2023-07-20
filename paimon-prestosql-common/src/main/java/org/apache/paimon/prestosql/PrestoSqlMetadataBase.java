@@ -297,7 +297,7 @@ public abstract class PrestoSqlMetadataBase implements ConnectorMetadata {
                         column.getName(), PrestoSqlTypeUtils.toPaimonType(column.getType())));
         try {
             catalog.alterTable(identifier, changes, false);
-        } catch (Catalog.TableNotExistException e) {
+        } catch (Exception e) {
             throw new RuntimeException(
                     format("table not exists: '%s'", prestosqlTableHandle.getTableName()));
         }
@@ -318,7 +318,7 @@ public abstract class PrestoSqlMetadataBase implements ConnectorMetadata {
         changes.add(SchemaChange.renameColumn(prestosqlColumnHandle.getColumnName(), target));
         try {
             catalog.alterTable(identifier, changes, false);
-        } catch (Catalog.TableNotExistException e) {
+        } catch (Exception e) {
             throw new RuntimeException(
                     format("table not exists: '%s'", prestosqlTableHandle.getTableName()));
         }
@@ -336,7 +336,7 @@ public abstract class PrestoSqlMetadataBase implements ConnectorMetadata {
         changes.add(SchemaChange.dropColumn(prestosqlColumnHandle.getColumnName()));
         try {
             catalog.alterTable(identifier, changes, false);
-        } catch (Catalog.TableNotExistException e) {
+        } catch (Exception e) {
             throw new RuntimeException(
                     format("table not exists: '%s'", prestosqlTableHandle.getTableName()));
         }
