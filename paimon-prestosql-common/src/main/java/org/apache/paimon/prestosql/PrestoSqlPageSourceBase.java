@@ -59,10 +59,13 @@ import static io.prestosql.spi.type.DateTimeEncoding.packDateTimeWithZone;
 import static io.prestosql.spi.type.DateType.DATE;
 import static io.prestosql.spi.type.Decimals.encodeShortScaledValue;
 import static io.prestosql.spi.type.IntegerType.INTEGER;
+import static io.prestosql.spi.type.RealType.REAL;
+import static io.prestosql.spi.type.SmallintType.SMALLINT;
 import static io.prestosql.spi.type.TimeType.TIME;
 import static io.prestosql.spi.type.TimeZoneKey.UTC_KEY;
 import static io.prestosql.spi.type.TimestampType.TIMESTAMP;
 import static io.prestosql.spi.type.TimestampWithTimeZoneType.TIMESTAMP_WITH_TIME_ZONE;
+import static io.prestosql.spi.type.TinyintType.TINYINT;
 import static java.lang.String.format;
 
 /** PrestoSql {@link ConnectorPageSource}. */
@@ -156,16 +159,18 @@ public abstract class PrestoSqlPageSourceBase implements ConnectorPageSource {
         if (javaType == boolean.class) {
             type.writeBoolean(output, (Boolean) value);
         } else if (javaType == long.class) {
-            if (type.equals(BIGINT)) {
+            if (type.equals(BIGINT)
+                    || type.equals(INTEGER)
+                    || type.equals(TINYINT)
+                    || type.equals(SMALLINT)
+                    || type.equals(DATE)) {
                 type.writeLong(output, ((Number) value).longValue());
-            } else if (type.equals(INTEGER)) {
-                type.writeLong(output, ((Number) value).intValue());
+            } else if (type.equals(REAL)) {
+                type.writeLong(output, Float.floatToIntBits((Float) value));
             } else if (type instanceof DecimalType) {
                 DecimalType decimalType = (DecimalType) type;
                 BigDecimal decimal = ((Decimal) value).toBigDecimal();
                 type.writeLong(output, encodeShortScaledValue(decimal, decimalType.getScale()));
-            } else if (type.equals(DATE)) {
-                type.writeLong(output, (int) value);
             } else if (type.equals(TIMESTAMP)) {
                 type.writeLong(output, ((Timestamp) value).getMillisecond());
             } else if (type.equals(TIME)) {
