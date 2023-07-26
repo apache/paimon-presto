@@ -115,11 +115,15 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
 
     @Override
     public Page getNextPage() {
-        try {
-            return nextPage();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return ClassLoaderUtils.runWithContextClassLoader(
+                () -> {
+                    try {
+                        return nextPage();
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                },
+                PrestoPageSourceBase.class.getClassLoader());
     }
 
     @Override
