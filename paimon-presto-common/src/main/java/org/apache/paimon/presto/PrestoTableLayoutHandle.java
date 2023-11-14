@@ -18,12 +18,13 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.shade.guava30.com.google.common.base.MoreObjects;
+
 import com.facebook.presto.common.predicate.TupleDomain;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 
 import java.util.Objects;
 

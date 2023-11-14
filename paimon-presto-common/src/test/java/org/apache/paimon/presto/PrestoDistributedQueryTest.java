@@ -18,10 +18,11 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableMap;
+
 import com.facebook.presto.Session;
 import com.facebook.presto.testing.QueryRunner;
 import com.facebook.presto.tests.AbstractTestDistributedQueries;
-import com.google.common.collect.ImmutableMap;
 import org.testng.SkipException;
 
 /** The test of PrestoDistributedQuery. */

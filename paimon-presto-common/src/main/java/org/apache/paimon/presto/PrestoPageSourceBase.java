@@ -25,6 +25,7 @@ import org.apache.paimon.data.InternalMap;
 import org.apache.paimon.data.InternalRow;
 import org.apache.paimon.data.Timestamp;
 import org.apache.paimon.reader.RecordReader;
+import org.apache.paimon.shade.guava30.com.google.common.base.Verify;
 import org.apache.paimon.types.DataType;
 import org.apache.paimon.types.DataTypeChecks;
 import org.apache.paimon.utils.InternalRowUtils;
@@ -45,7 +46,6 @@ import com.facebook.presto.common.type.VarcharType;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorPageSource;
 import com.facebook.presto.spi.PrestoException;
-import com.google.common.base.Verify;
 import io.airlift.slice.Slice;
 
 import java.io.IOException;

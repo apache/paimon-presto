@@ -18,7 +18,8 @@
 
 package org.apache.paimon.prestosql;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableList;
+
 import io.prestosql.spi.session.PropertyMetadata;
 import io.prestosql.spi.type.ArrayType;
 

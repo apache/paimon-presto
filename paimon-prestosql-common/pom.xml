@@ -146,7 +146,6 @@ under the License.
                             <artifactSet>
                                 <includes combine.children="append">
                                     <include>org.apache.paimon:paimon-bundle</include>
-                                    <include>com.google.guava:guava</include>
                                     <include>org.xerial.snappy:snappy-java</include>
                                     <include>org.slf4j:slf4j-api</include>
                                     <include>org.apache.logging.log4j:log4j-api</include>

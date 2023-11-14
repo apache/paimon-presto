@@ -21,6 +21,7 @@ package org.apache.paimon.presto;
 import org.apache.paimon.data.BinaryString;
 import org.apache.paimon.predicate.Predicate;
 import org.apache.paimon.predicate.PredicateBuilder;
+import org.apache.paimon.shade.guava30.com.google.common.base.Preconditions;
 import org.apache.paimon.types.RowType;
 
 import com.facebook.presto.common.predicate.Domain;
@@ -42,7 +43,6 @@ import com.facebook.presto.common.type.TimestampType;
 import com.facebook.presto.common.type.Type;
 import com.facebook.presto.common.type.VarbinaryType;
 import com.facebook.presto.common.type.VarcharType;
-import com.google.common.base.Preconditions;
 import io.airlift.slice.Slice;
 
 import java.math.BigDecimal;
