@@ -18,6 +18,7 @@
 
 package org.apache.paimon.prestosql;
 
+import org.apache.paimon.shade.guava30.com.google.common.collect.Lists;
 import org.apache.paimon.types.DataField;
 import org.apache.paimon.types.DataType;
 import org.apache.paimon.types.DataTypes;
@@ -25,7 +26,6 @@ import org.apache.paimon.types.IntType;
 import org.apache.paimon.types.TimeType;
 import org.apache.paimon.types.VarCharType;
 
-import com.google.common.collect.Lists;
 import io.prestosql.spi.type.ArrayType;
 import io.prestosql.spi.type.BigintType;
 import io.prestosql.spi.type.BooleanType;

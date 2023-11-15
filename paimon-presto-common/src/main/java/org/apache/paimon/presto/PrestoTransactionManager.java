@@ -18,9 +18,10 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.shade.guava30.com.google.common.base.Preconditions;
+
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
-import com.google.common.base.Preconditions;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

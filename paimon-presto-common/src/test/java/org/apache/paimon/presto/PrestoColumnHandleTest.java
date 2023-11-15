@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableMap;
 import org.apache.paimon.types.VarCharType;
 import org.apache.paimon.utils.JsonSerdeUtil;
 
@@ -27,7 +28,6 @@ import com.facebook.airlift.json.JsonObjectMapperProvider;
 import com.facebook.airlift.json.ObjectMapperProvider;
 import com.facebook.presto.common.type.Type;
 import com.facebook.presto.type.TypeDeserializer;
-import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 
 import static com.facebook.presto.common.type.StandardTypes.VARCHAR;

@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableList;
 import org.apache.paimon.types.ArrayType;
 import org.apache.paimon.types.BigIntType;
 import org.apache.paimon.types.BinaryType;
@@ -54,7 +55,6 @@ import com.facebook.presto.common.type.TypeSignature;
 import com.facebook.presto.common.type.TypeSignatureParameter;
 import com.facebook.presto.common.type.VarbinaryType;
 import com.facebook.presto.common.type.VarcharType;
-import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.Objects;

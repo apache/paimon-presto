@@ -21,6 +21,7 @@ package org.apache.paimon.presto;
 import org.apache.paimon.data.BinaryString;
 import org.apache.paimon.predicate.Predicate;
 import org.apache.paimon.predicate.PredicateBuilder;
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableMap;
 import org.apache.paimon.types.DataField;
 import org.apache.paimon.types.IntType;
 import org.apache.paimon.types.RowType;
@@ -30,7 +31,6 @@ import com.facebook.presto.common.predicate.Range;
 import com.facebook.presto.common.predicate.TupleDomain;
 import com.facebook.presto.common.predicate.ValueSet;
 import com.facebook.presto.common.type.CharType;
-import com.google.common.collect.ImmutableMap;
 import io.airlift.slice.Slices;
 import org.junit.jupiter.api.Test;
 

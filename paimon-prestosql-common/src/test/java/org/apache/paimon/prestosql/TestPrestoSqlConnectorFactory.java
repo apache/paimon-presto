@@ -18,7 +18,8 @@
 
 package org.apache.paimon.prestosql;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableMap;
+
 import io.prestosql.spi.connector.Connector;
 import io.prestosql.spi.connector.ConnectorFactory;
 import io.prestosql.testing.TestingConnectorContext;
