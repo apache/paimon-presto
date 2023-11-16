@@ -18,15 +18,17 @@
 
 package org.apache.paimon.presto;
 
-import org.apache.paimon.options.Options;
-
+import com.facebook.airlift.bootstrap.Bootstrap;
+import com.facebook.airlift.json.JsonModule;
 import com.facebook.presto.spi.ConnectorHandleResolver;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorContext;
 import com.facebook.presto.spi.connector.ConnectorFactory;
+import com.google.inject.Injector;
 
 import java.util.Map;
 
+import static com.google.common.base.Throwables.throwIfUnchecked;
 import static java.util.Objects.requireNonNull;
 
 /** Presto {@link ConnectorFactory}. */
@@ -46,10 +48,30 @@ public class PrestoConnectorFactory implements ConnectorFactory {
     public Connector create(
             String catalogName, Map<String, String> config, ConnectorContext context) {
         requireNonNull(config, "config is null");
-        return new PrestoConnector(
-                new PrestoTransactionManager(),
-                new PrestoSplitManager(),
-                new PrestoPageSourceProvider(),
-                new PrestoMetadataFactory(Options.fromMap(config), context.getTypeManager())) {};
+
+        try {
+            Bootstrap app =
+                    new Bootstrap(
+                            new JsonModule(),
+                            new PaimonModule(
+                                    catalogName,
+                                    context.getTypeManager(),
+                                    context.getFunctionMetadataManager(),
+                                    context.getStandardFunctionResolution(),
+                                    context.getRowExpressionService(),
+                                    config));
+
+            Injector injector =
+                    app.doNotInitializeLogging()
+                            .setRequiredConfigurationProperties(config)
+                            .noStrictConfig()
+                            .quiet()
+                            .initialize();
+
+            return injector.getInstance(PrestoConnector.class);
+        } catch (Exception e) {
+            throwIfUnchecked(e);
+            throw new RuntimeException(e);
+        }
     }
 }

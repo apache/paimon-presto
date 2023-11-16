@@ -37,19 +37,18 @@ public abstract class PrestoConnectorBase implements Connector {
     private final PrestoTransactionManager transactionManager;
     private final PrestoSplitManager prestoSplitManager;
     private final PrestoPageSourceProvider prestoPageSourceProvider;
-    private final PrestoMetadataFactory prestoMetadataFactory;
+    private final PrestoMetadata prestoMetadata;
 
     public PrestoConnectorBase(
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
-            PrestoMetadataFactory prestoMetadataFactory) {
+            PrestoMetadata prestoMetadata) {
         this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
         this.prestoSplitManager = requireNonNull(prestoSplitManager, "prestoSplitManager is null");
         this.prestoPageSourceProvider =
                 requireNonNull(prestoPageSourceProvider, "prestoPageSourceProvider is null");
-        this.prestoMetadataFactory =
-                requireNonNull(prestoMetadataFactory, "prestoMetadataFactory is null");
+        this.prestoMetadata = requireNonNull(prestoMetadata, "prestoMetadata is null");
     }
 
     @Override
@@ -59,7 +58,7 @@ public abstract class PrestoConnectorBase implements Connector {
         ConnectorTransactionHandle transaction = new PrestoTransactionHandle();
         try (ThreadContextClassLoader ignored =
                 new ThreadContextClassLoader(getClass().getClassLoader())) {
-            transactionManager.put(transaction, prestoMetadataFactory.create());
+            transactionManager.put(transaction, prestoMetadata);
         }
         return transaction;
     }

@@ -18,28 +18,42 @@
 
 package org.apache.paimon.presto;
 
-import com.facebook.presto.spi.connector.Connector;
-import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
+import com.facebook.airlift.configuration.Config;
 
-import javax.inject.Inject;
+/** Used for configuration item inspection and management. */
+public class PaimonConfig {
 
-/** Presto {@link Connector}. */
-public class PrestoConnector extends PrestoConnectorBase {
+    private String warehouse;
+    private String metastore;
+    private String uri;
 
-    private final PrestoTransactionManager transactionManager;
-
-    @Inject
-    public PrestoConnector(
-            PrestoTransactionManager transactionManager,
-            PrestoSplitManager prestoSplitManager,
-            PrestoPageSourceProvider prestoPageSourceProvider,
-            PrestoMetadata prestoMetadata) {
-        super(transactionManager, prestoSplitManager, prestoPageSourceProvider, prestoMetadata);
-        this.transactionManager = transactionManager;
+    public String getWarehouse() {
+        return warehouse;
     }
 
-    @Override
-    public void commit(ConnectorTransactionHandle transaction) {
-        transactionManager.remove(transaction);
+    @Config("warehouse")
+    public PaimonConfig setWarehouse(String warehouse) {
+        this.warehouse = warehouse;
+        return this;
+    }
+
+    public String getMetastore() {
+        return metastore;
+    }
+
+    @Config("metastore")
+    public PaimonConfig setMetastore(String metastore) {
+        this.metastore = metastore;
+        return this;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    @Config("uri")
+    public PaimonConfig setUri(String uri) {
+        this.uri = uri;
+        return this;
     }
 }
