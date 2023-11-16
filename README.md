@@ -28,7 +28,7 @@ For example, if your presto version is 0.274 and hive version is 2.3.4, you coul
 mvn clean install -DskipTests -am -pl paimon-presto-0.273 -Dpresto.version=0.274 -Dhive.version=2.3.4
 ```
 
-### Install
+### Install Paimon Connector
 
 ```
 tar -zxf paimon-presto-${PRESTO_VERSION}/target/paimon-presto-${PRESTO_VERSION}-${PAIMON_VERSION}-plugin.tar.gz -C paimon-presto-${PRESTO_VERSION}/target
@@ -36,6 +36,42 @@ cp -r paimon-presto-${PRESTO_VERSION}/target/paimon-presto-${PRESTO_VERSION}-${P
 ```
 
 Note that, the variable `PRESTO_VERSION` is module name, must be one of 0.236, 0.268, 0.273.
+
+### Query
+
+```
+cd ${PRESTO_HOME}
+mkdir -p etc/catalog
+```
+
+Query FileSystem table:
+
+```
+vim etc/catalog/paimon.properties
+```
+
+and set the following config:
+
+```
+connector.name=paimon
+warehouse=hdfs://${YOUR_HDFS}/path
+```
+
+Query HiveCatalog table:
+
+```
+vim etc/catalog/paimon.properties
+```
+
+and set the following config:
+
+```
+connector.name=paimon
+warehouse=hdfs://${YOUR_HDFS}/path
+metastore=hive
+uri=thrift://${YOUR_HIVE_METASTORE}:9083
+```
+
 
 
 
