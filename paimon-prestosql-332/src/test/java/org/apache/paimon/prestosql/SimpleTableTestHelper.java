@@ -30,7 +30,6 @@ import org.apache.paimon.table.sink.InnerTableWrite;
 import org.apache.paimon.types.RowType;
 
 import java.util.Collections;
-import java.util.HashMap;
 
 /** A simple table test helper to write and commit. */
 public class SimpleTableTestHelper {
@@ -39,15 +38,13 @@ public class SimpleTableTestHelper {
     private final InnerTableCommit commit;
 
     public SimpleTableTestHelper(Path path, RowType rowType) throws Exception {
-        HashMap options = new HashMap();
-        options.put("write-mode", "change-log");
         new SchemaManager(LocalFileIO.create(), path)
                 .createTable(
                         new Schema(
                                 rowType.getFields(),
                                 Collections.emptyList(),
-                                Collections.emptyList(),
-                                options,
+                                Collections.singletonList("a"),
+                                Collections.emptyMap(),
                                 ""));
         FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), path);
         String user = "user";
