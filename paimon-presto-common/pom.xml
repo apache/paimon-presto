@@ -70,13 +70,16 @@ under the License.
         </dependency>
 
         <!-- Due to the extensive and complex dependencies of Hive,
-        we utilize the 'provided' scope for testing and use 'runtime'
-        to package the actual dependencies. -->
+        we use the 'test' scope for testing and 'compile' to package the actual dependencies.
+        This issue can be addressed in the future using the shade plugin
+        or by utilizing Presto's Hive Metastore wrapping tool.
+        However, for now, as we aim to support different versions of Hive,
+        we can only adopt this approach temporarily. -->
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-metastore</artifactId>
             <version>${hive.version}</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>guava</artifactId>
@@ -169,7 +172,7 @@ under the License.
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-metastore</artifactId>
             <version>${hive.version}</version>
-            <scope>provided</scope>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>guava</artifactId>
