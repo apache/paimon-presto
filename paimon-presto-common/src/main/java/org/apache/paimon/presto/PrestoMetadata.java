@@ -72,7 +72,6 @@ import static org.apache.paimon.utils.Preconditions.checkArgument;
 /** Presto {@link ConnectorMetadata}. */
 public class PrestoMetadata implements ConnectorMetadata {
 
-    // TODO: make catalog threadsafe, it should be implemented by paimon core.
     private final Catalog catalog;
     private final TypeManager typeManager;
 
