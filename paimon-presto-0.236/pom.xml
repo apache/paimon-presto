@@ -35,6 +35,7 @@ under the License.
         <presto.version>0.236</presto.version>
         <hadoop.apache2.version>2.7.4-9</hadoop.apache2.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <airlift.version>0.191</airlift.version>
     </properties>
 
     <dependencies>
@@ -43,6 +44,28 @@ under the License.
             <artifactId>paimon-presto-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.facebook.airlift</groupId>
+            <artifactId>configuration</artifactId>
+            <version>${airlift.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.facebook.airlift</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>${airlift.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.facebook.airlift</groupId>
+            <artifactId>json</artifactId>
+            <version>${airlift.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>

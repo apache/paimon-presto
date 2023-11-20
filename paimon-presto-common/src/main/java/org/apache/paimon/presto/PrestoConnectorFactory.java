@@ -26,6 +26,7 @@ import com.facebook.presto.spi.connector.ConnectorContext;
 import com.facebook.presto.spi.connector.ConnectorFactory;
 import com.google.inject.Injector;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import static com.google.common.base.Throwables.throwIfUnchecked;
@@ -61,12 +62,17 @@ public class PrestoConnectorFactory implements ConnectorFactory {
                                     context.getRowExpressionService(),
                                     config));
 
-            Injector injector =
-                    app.doNotInitializeLogging()
-                            .setRequiredConfigurationProperties(config)
-                            .noStrictConfig()
-                            .quiet()
-                            .initialize();
+            Bootstrap bootstrap =
+                    app.doNotInitializeLogging().setRequiredConfigurationProperties(config).quiet();
+            try {
+                // Using reflection to achieve compatibility with different versions of
+                // dependencies.
+                Method noStrictConfigMethod = Bootstrap.class.getMethod("noStrictConfig");
+                noStrictConfigMethod.invoke(bootstrap);
+            } catch (java.lang.NoSuchMethodException e) {
+                // ignore
+            }
+            Injector injector = bootstrap.initialize();
 
             return injector.getInstance(PrestoConnector.class);
         } catch (Exception e) {
