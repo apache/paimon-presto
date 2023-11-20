@@ -50,7 +50,7 @@ under the License.
             <version>${hadoop.apache2.version}</version>
         </dependency>
 
-        <!-- see https://mvnrepository.com/artifact/io.prestosql.hive/hive-apache -->
+        <!-- see https://mvnrepository.com/artifact/com.facebook.presto.hive/hive-apache -->
         <dependency>
             <groupId>com.facebook.presto.hive</groupId>
             <artifactId>hive-apache</artifactId>
