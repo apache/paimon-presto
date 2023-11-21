@@ -26,13 +26,13 @@ Both Hive 2 and 3, as well as Hadoop 2 and 3, are supported.
 
 For example, if your presto version is 0.274, hive and hadoop version is 2.x, you could run:
 
-```
+```bash
 mvn clean install -DskipTests -am -pl paimon-presto-0.273 -Dpresto.version=0.274 -Dhadoop.apache2.version=2.7.4-9 -Dhive.apache.version=1.2.2-2
 ```
 
 ### Install Paimon Connector
 
-```
+```bash
 tar -zxf paimon-presto-${PRESTO_VERSION}/target/paimon-presto-${PRESTO_VERSION}-${PAIMON_VERSION}-plugin.tar.gz -C ${PRESTO_HOME}/plugin
 ```
 
@@ -40,20 +40,20 @@ Note that, the variable `PRESTO_VERSION` is module name, must be one of 0.236, 0
 
 ### Configuration
 
-```
+```bash
 cd ${PRESTO_HOME}
 mkdir -p etc/catalog
 ```
 
 Query FileSystem table:
 
-```
+```bash
 vim etc/catalog/paimon.properties
 ```
 
 and set the following config:
 
-```
+```properties
 connector.name=paimon
 # set your filesystem path, like hdfs://namenode01:8020/path
 warehouse=${YOUR_FS_PATH}
@@ -61,13 +61,13 @@ warehouse=${YOUR_FS_PATH}
 
 Query HiveCatalog table:
 
-```
+```bash
 vim etc/catalog/paimon.properties
 ```
 
 and set the following config:
 
-```
+```properties
 connector.name=paimon
 # set your filesystem path, like hdfs://namenode01:8020/path
 warehouse=${YOUR_FS_PATH}
