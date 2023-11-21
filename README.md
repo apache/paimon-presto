@@ -38,7 +38,7 @@ tar -zxf paimon-presto-${PRESTO_VERSION}/target/paimon-presto-${PRESTO_VERSION}-
 
 Note that, the variable `PRESTO_VERSION` is module name, must be one of 0.236, 0.268, 0.273.
 
-### Query
+### Configuration
 
 ```
 cd ${PRESTO_HOME}
@@ -55,7 +55,8 @@ and set the following config:
 
 ```
 connector.name=paimon
-warehouse=hdfs://${YOUR_HDFS}/path
+# set your filesystem path, like hdfs://namenode01:8020/path
+warehouse=${YOUR_FS_PATH}
 ```
 
 Query HiveCatalog table:
@@ -68,7 +69,8 @@ and set the following config:
 
 ```
 connector.name=paimon
-warehouse=hdfs://${YOUR_HDFS}/path
+# set your filesystem path, like hdfs://namenode01:8020/path
+warehouse=${YOUR_FS_PATH}
 metastore=hive
 uri=thrift://${YOUR_HIVE_METASTORE}:9083
 ```
