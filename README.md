@@ -17,12 +17,13 @@ Apache Paimon is an open source project of [The Apache Software Foundation](http
 | [0.273, latest] | `mvn clean install -DskipTests -am -pl paimon-presto-0.273` |
 
 We utilize Presto-shaded versions of Hive and Hadoop packages to address dependency conflicts. 
-You can check the following two links to select the appropriate versions of Hive and Hadoop. 
-Both Hive 2 and 3, as well as Hadoop 2 and 3, are supported.
+You can check the following two links to select the appropriate versions of Hive and Hadoop:
 
 [hadoop-apache2](https://mvnrepository.com/artifact/com.facebook.presto.hadoop/hadoop-apache2)
 
 [hive-apache](https://mvnrepository.com/artifact/com.facebook.presto.hive/hive-apache)
+
+Both Hive 2 and 3, as well as Hadoop 2 and 3, are supported.
 
 For example, if your presto version is 0.274, hive and hadoop version is 2.x, you could run:
 
