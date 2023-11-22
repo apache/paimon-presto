@@ -49,6 +49,8 @@ import com.facebook.presto.spi.connector.ConnectorOutputMetadata;
 import com.facebook.presto.spi.statistics.ComputedStatistics;
 import io.airlift.slice.Slice;
 
+import javax.inject.Inject;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
@@ -73,6 +75,7 @@ public class PrestoMetadata implements ConnectorMetadata {
     private final Catalog catalog;
     private final TypeManager typeManager;
 
+    @Inject
     public PrestoMetadata(Options catalogOptions, TypeManager typeManager) {
         try {
             SecurityContext.install(catalogOptions);

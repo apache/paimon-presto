@@ -21,21 +21,20 @@ package org.apache.paimon.presto;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 
+import javax.inject.Inject;
+
 /** Presto {@link Connector}. */
 public class PrestoConnector extends PrestoConnectorBase {
 
     private final PrestoTransactionManager transactionManager;
 
+    @Inject
     public PrestoConnector(
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
-            PrestoMetadataFactory prestoMetadataFactory) {
-        super(
-                transactionManager,
-                prestoSplitManager,
-                prestoPageSourceProvider,
-                prestoMetadataFactory);
+            PrestoMetadata prestoMetadata) {
+        super(transactionManager, prestoSplitManager, prestoPageSourceProvider, prestoMetadata);
         this.transactionManager = transactionManager;
     }
 

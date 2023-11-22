@@ -36,9 +36,54 @@ under the License.
     <properties>
         <presto.version>0.273</presto.version>
         <hadoop.apache2.version>2.7.4-9</hadoop.apache2.version>
+        <hive.apache.version>1.2.2-2</hive.apache.version>
+        <airlift.version>0.205</airlift.version>
+        <libthrift.version>0.9.3</libthrift.version>
     </properties>
 
     <dependencies>
+
+        <!-- see https://mvnrepository.com/artifact/com.facebook.presto.hadoop/hadoop-apache2 -->
+        <dependency>
+            <groupId>com.facebook.presto.hadoop</groupId>
+            <artifactId>hadoop-apache2</artifactId>
+            <version>${hadoop.apache2.version}</version>
+        </dependency>
+
+        <!-- see https://mvnrepository.com/artifact/com.facebook.presto.hive/hive-apache -->
+        <dependency>
+            <groupId>com.facebook.presto.hive</groupId>
+            <artifactId>hive-apache</artifactId>
+            <version>${hive.apache.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.thrift</groupId>
+            <artifactId>libthrift</artifactId>
+            <version>${libthrift.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.facebook.airlift</groupId>
+            <artifactId>configuration</artifactId>
+            <version>${airlift.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.facebook.airlift</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>${airlift.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.facebook.airlift</groupId>
+            <artifactId>json</artifactId>
+            <version>${airlift.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
@@ -65,13 +110,6 @@ under the License.
             <artifactId>presto-client</artifactId>
             <version>${presto.version}</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.facebook.presto.hadoop</groupId>
-            <artifactId>hadoop-apache2</artifactId>
-            <version>${hadoop.apache2.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -113,34 +151,4 @@ under the License.
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>shade-paimon</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <artifactSet>
-                                <includes combine.children="append">
-                                    <include>org.apache.paimon:paimon-bundle</include>
-                                    <include>org.slf4j:slf4j-api</include>
-                                    <include>org.apache.logging.log4j:log4j-api</include>
-                                    <include>org.apache.logging.log4j:log4j-core</include>
-                                    <include>org.apache.logging.log4j:log4j-slf4j-impl</include>
-                                    <include>org.apache.logging.log4j:log4j-1.2-api</include>
-                                    <include>org.apache.commons:commons-lang3</include>
-                                </includes>
-                            </artifactSet>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

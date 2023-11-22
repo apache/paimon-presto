@@ -18,23 +18,38 @@
 
 package org.apache.paimon.presto;
 
-import org.apache.paimon.options.Options;
+import java.util.Objects;
 
-import com.facebook.presto.common.type.TypeManager;
-import com.facebook.presto.spi.connector.ConnectorMetadata;
+import static java.util.Objects.requireNonNull;
 
-/** Presto MetadataFactory. */
-public class PrestoMetadataFactory {
+/** Wrap for connector id. */
+public final class PaimonConnectorId {
 
-    private final Options catalogOptions;
-    private final TypeManager typeManager;
+    private final String id;
 
-    public PrestoMetadataFactory(Options catalogOptions, TypeManager typeManager) {
-        this.catalogOptions = catalogOptions;
-        this.typeManager = typeManager;
+    public PaimonConnectorId(String id) {
+        this.id = requireNonNull(id, "id is null");
     }
 
-    public ConnectorMetadata create() {
-        return new PrestoMetadata(catalogOptions, typeManager);
+    @Override
+    public String toString() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        PaimonConnectorId other = (PaimonConnectorId) obj;
+        return Objects.equals(this.id, other.id);
     }
 }
