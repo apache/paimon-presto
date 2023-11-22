@@ -28,6 +28,7 @@ import org.apache.paimon.reader.RecordReader;
 import org.apache.paimon.shade.guava30.com.google.common.base.Verify;
 import org.apache.paimon.types.DataType;
 import org.apache.paimon.types.DataTypeChecks;
+import org.apache.paimon.utils.CloseableIterator;
 import org.apache.paimon.utils.InternalRowUtils;
 
 import com.facebook.presto.common.Page;
@@ -47,6 +48,8 @@ import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorPageSource;
 import com.facebook.presto.spi.PrestoException;
 import io.airlift.slice.Slice;
+
+import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -72,16 +75,19 @@ import static java.lang.String.format;
 /** Presto {@link ConnectorPageSource}. */
 public abstract class PrestoPageSourceBase implements ConnectorPageSource {
 
-    private final RecordReader<InternalRow> reader;
+    private static final int ROWS_PER_REQUEST = 4096;
+
+    private final CloseableIterator<InternalRow> iterator;
     private final PageBuilder pageBuilder;
     private final List<Type> prestoColumnTypes;
     private final List<DataType> paimonColumnTypes;
 
     private boolean isFinished = false;
+    private long numReturn = 0;
 
     public PrestoPageSourceBase(
             RecordReader<InternalRow> reader, List<ColumnHandle> projectedColumns) {
-        this.reader = reader;
+        this.iterator = reader.toCloseableIterator();
         this.prestoColumnTypes = new ArrayList<>();
         this.paimonColumnTypes = new ArrayList<>();
         for (ColumnHandle handle : projectedColumns) {
@@ -131,15 +137,18 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
         return 0;
     }
 
+    @Nullable
     private Page nextPage() throws IOException {
-        RecordReader.RecordIterator<InternalRow> batch = reader.readBatch();
-        if (batch == null) {
-            isFinished = true;
-            return null;
-        }
-        InternalRow row;
-        while ((row = batch.next()) != null) {
+        int count = 0;
+        while (count < ROWS_PER_REQUEST && !pageBuilder.isFull()) {
+            if (!iterator.hasNext()) {
+                isFinished = true;
+                return returnPage(count);
+            }
+
+            InternalRow row = iterator.next();
             pageBuilder.declarePosition();
+            count++;
             for (int i = 0; i < prestoColumnTypes.size(); i++) {
                 BlockBuilder output = pageBuilder.getBlockBuilder(i);
                 appendTo(
@@ -149,7 +158,15 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
                         output);
             }
         }
-        batch.releaseBatch();
+
+        return returnPage(count);
+    }
+
+    private Page returnPage(int count) {
+        if (count == 0) {
+            return null;
+        }
+        numReturn += count;
         Page page = pageBuilder.build();
         pageBuilder.reset();
         return page;
@@ -157,7 +174,11 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
 
     @Override
     public void close() throws IOException {
-        this.reader.close();
+        try {
+            this.iterator.close();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     private void appendTo(Type prestoType, DataType paimonType, Object value, BlockBuilder output) {
