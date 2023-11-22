@@ -10,13 +10,43 @@ Apache Paimon is an open source project of [The Apache Software Foundation](http
 
 ### Build
 
-| Version         | Command                                                     |
-|-----------------|-------------------------------------------------------------|
-| [0.236, 0.268)  | `mvn clean install -DskipTests -am -pl paimon-presto-0.236` |
-| [0.268, 0.273)  | `mvn clean install -DskipTests -am -pl paimon-presto-0.268` |
-| [0.273, latest] | `mvn clean install -DskipTests -am -pl paimon-presto-0.273` |
+```bash
+mvn clean install -DskipTests
+```
 
-We utilize Presto-shaded versions of Hive and Hadoop packages to address dependency conflicts. 
+During the packaging process, you may encounter the following errors: 
+
+```
+[ERROR] Failed to execute goal on project paimon-presto: Could not resolve dependencies for project org.apache.paimon:paimon-presto:pom:0.6-SNAPSHOT: The following artifacts could not be resolved: org.apache.paimon:paimon-bundle:jar:0.6-SNAPSHOT (absent): Could not find artifact org.apache.paimon:paimon-bundle:jar:0.6-SNAPSHOT in xxx
+```
+
+You can resolve the packaging issue by adding the following Maven repository addresses to your `settings.xml` or to the `pom.xml` of the current project: 
+
+```xml
+<repositories>
+    <repository>
+        <id>apache-releases</id>
+        <name>apache releases</name>
+        <url>https://repository.apache.org/content/repositories/releases/</url>
+    </repository>
+    <repository>
+        <id>apache-snapshots</id>
+        <name>apache snapshots</name>
+        <url>https://repository.apache.org/content/repositories/snapshots/</url>
+    </repository>
+</repositories>
+```
+
+After the packaging is complete, you can choose the corresponding connector based on your own Presto version: 
+
+| Version         | Package                                                                       |
+|-----------------|-------------------------------------------------------------------------------|
+| [0.236, 0.268)  | `./paimon-presto-0.236/target/paimon-presto-0.236-0.6-SNAPSHOT-plugin.tar.gz` |
+| [0.268, 0.273)  | `./paimon-presto-0.268/target/paimon-presto-0.268-0.6-SNAPSHOT-plugin.tar.gz` |
+| [0.273, latest] | `./paimon-presto-0.273/target/paimon-presto-0.273-0.6-SNAPSHOT-plugin.tar.gz` |
+
+Of course, we also support different versions of Hive and Hadoop. But note that we utilize 
+Presto-shaded versions of Hive and Hadoop packages to address dependency conflicts. 
 You can check the following two links to select the appropriate versions of Hive and Hadoop:
 
 [hadoop-apache2](https://mvnrepository.com/artifact/com.facebook.presto.hadoop/hadoop-apache2)
