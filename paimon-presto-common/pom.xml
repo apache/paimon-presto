@@ -94,14 +94,12 @@ under the License.
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
             <version>${presto.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-common</artifactId>
             <version>${presto.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
