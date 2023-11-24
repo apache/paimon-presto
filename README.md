@@ -114,7 +114,7 @@ and set the following config:
 
 ```properties
 connector.name=paimon
-# set your filesystem path, like hdfs://namenode01:8020/path
+# set your filesystem path, such as hdfs://namenode01:8020/path and s3://${YOUR_S3_BUCKET}/path
 warehouse=${YOUR_FS_PATH}
 metastore=hive
 uri=thrift://${YOUR_HIVE_METASTORE}:9083
