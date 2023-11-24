@@ -28,6 +28,8 @@ import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorMetadata;
 import com.facebook.presto.spi.transaction.IsolationLevel;
 
+import java.util.Optional;
+
 import static com.facebook.presto.spi.transaction.IsolationLevel.READ_COMMITTED;
 import static com.facebook.presto.spi.transaction.IsolationLevel.checkConnectorSupports;
 import static java.util.Objects.requireNonNull;
@@ -39,14 +41,27 @@ public abstract class PrestoConnectorBase implements Connector {
     private final PrestoSplitManager prestoSplitManager;
     private final PrestoPageSourceProvider prestoPageSourceProvider;
     private final PrestoMetadata prestoMetadata;
-    private final PrestoPlanOptimizerProvider prestoPlanOptimizerProvider;
+    private final Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider;
+
+    public PrestoConnectorBase(
+            PrestoTransactionManager transactionManager,
+            PrestoSplitManager prestoSplitManager,
+            PrestoPageSourceProvider prestoPageSourceProvider,
+            PrestoMetadata prestoMetadata) {
+        this(
+                transactionManager,
+                prestoSplitManager,
+                prestoPageSourceProvider,
+                prestoMetadata,
+                Optional.empty());
+    }
 
     public PrestoConnectorBase(
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
             PrestoMetadata prestoMetadata,
-            PrestoPlanOptimizerProvider prestoPlanOptimizerProvider) {
+            Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider) {
         this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
         this.prestoSplitManager = requireNonNull(prestoSplitManager, "prestoSplitManager is null");
         this.prestoPageSourceProvider =
@@ -91,6 +106,6 @@ public abstract class PrestoConnectorBase implements Connector {
 
     @Override
     public ConnectorPlanOptimizerProvider getConnectorPlanOptimizerProvider() {
-        return prestoPlanOptimizerProvider;
+        return prestoPlanOptimizerProvider.orElseThrow(UnsupportedOperationException::new);
     }
 }
