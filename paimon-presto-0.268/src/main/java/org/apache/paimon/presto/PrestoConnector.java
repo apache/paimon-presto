@@ -33,8 +33,14 @@ public class PrestoConnector extends PrestoConnectorBase {
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
-            PrestoMetadata prestoMetadata) {
-        super(transactionManager, prestoSplitManager, prestoPageSourceProvider, prestoMetadata);
+            PrestoMetadata prestoMetadata,
+            PrestoPlanOptimizerProvider prestoPlanOptimizerProvider) {
+        super(
+                transactionManager,
+                prestoSplitManager,
+                prestoPageSourceProvider,
+                prestoMetadata,
+                prestoPlanOptimizerProvider);
         this.transactionManager = transactionManager;
     }
 

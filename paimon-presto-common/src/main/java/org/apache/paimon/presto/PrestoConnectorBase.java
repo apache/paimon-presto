@@ -22,6 +22,7 @@ import com.facebook.presto.spi.classloader.ThreadContextClassLoader;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.facebook.presto.spi.connector.ConnectorPageSourceProvider;
+import com.facebook.presto.spi.connector.ConnectorPlanOptimizerProvider;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorMetadata;
@@ -38,17 +39,21 @@ public abstract class PrestoConnectorBase implements Connector {
     private final PrestoSplitManager prestoSplitManager;
     private final PrestoPageSourceProvider prestoPageSourceProvider;
     private final PrestoMetadata prestoMetadata;
+    private final PrestoPlanOptimizerProvider prestoPlanOptimizerProvider;
 
     public PrestoConnectorBase(
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
-            PrestoMetadata prestoMetadata) {
+            PrestoMetadata prestoMetadata,
+            PrestoPlanOptimizerProvider prestoPlanOptimizerProvider) {
         this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
         this.prestoSplitManager = requireNonNull(prestoSplitManager, "prestoSplitManager is null");
         this.prestoPageSourceProvider =
                 requireNonNull(prestoPageSourceProvider, "prestoPageSourceProvider is null");
         this.prestoMetadata = requireNonNull(prestoMetadata, "prestoMetadata is null");
+        this.prestoPlanOptimizerProvider =
+                requireNonNull(prestoPlanOptimizerProvider, "prestoPlanOptimizerProvider is null");
     }
 
     @Override
@@ -82,5 +87,10 @@ public abstract class PrestoConnectorBase implements Connector {
     @Override
     public void rollback(ConnectorTransactionHandle transaction) {
         transactionManager.remove(transaction);
+    }
+
+    @Override
+    public ConnectorPlanOptimizerProvider getConnectorPlanOptimizerProvider() {
+        return prestoPlanOptimizerProvider;
     }
 }
