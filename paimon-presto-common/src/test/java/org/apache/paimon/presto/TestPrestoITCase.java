@@ -40,6 +40,7 @@ import org.apache.paimon.types.VarCharType;
 import com.facebook.presto.testing.MaterializedResult;
 import com.facebook.presto.testing.QueryRunner;
 import com.facebook.presto.tests.DistributedQueryRunner;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.nio.file.Files;
@@ -56,6 +57,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /** ITCase for presto connector. */
 public class TestPrestoITCase {
+
+    private QueryRunner queryRunner;
 
     private static final String CATALOG = "paimon";
     private static final String DB = "default";
@@ -173,6 +176,11 @@ public class TestPrestoITCase {
         return new SimpleTableTestHelper(tablePath, rowType);
     }
 
+    @BeforeTest
+    public void init() throws Exception {
+        queryRunner = createQueryRunner();
+    }
+
     @Test
     public void testComplexTypes() throws Exception {
         assertThat(sql("SELECT * FROM paimon.default.t4")).isEqualTo("[[1, {1=2}]]");
@@ -187,7 +195,7 @@ public class TestPrestoITCase {
     }
 
     @Test
-    public void testLimit() throws Exception {
+    public void testLimitCommon() throws Exception {
         assertThat(sql("SELECT * FROM paimon.default.t1 LIMIT 1")).isEqualTo("[[1, 2, 1, 1]]");
         assertThat(sql("SELECT * FROM paimon.default.t1 WHERE a = 5 LIMIT 1"))
                 .isEqualTo("[[5, 6, 3, 3]]");
@@ -216,7 +224,7 @@ public class TestPrestoITCase {
     }
 
     private String sql(String sql) throws Exception {
-        MaterializedResult result = createQueryRunner().execute(sql);
+        MaterializedResult result = queryRunner.execute(sql);
         return result.getMaterializedRows().toString();
     }
 }
