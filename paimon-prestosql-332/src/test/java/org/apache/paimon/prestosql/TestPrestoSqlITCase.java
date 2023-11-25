@@ -42,6 +42,7 @@ import io.prestosql.testing.AbstractTestQueryFramework;
 import io.prestosql.testing.DistributedQueryRunner;
 import io.prestosql.testing.MaterializedResult;
 import io.prestosql.testing.QueryRunner;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.nio.file.Files;
@@ -58,6 +59,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /** ITCase for PrestoSql connector. */
 public class TestPrestoSqlITCase extends AbstractTestQueryFramework {
+
+    private QueryRunner queryRunner;
 
     private static final String CATALOG = "paimon";
     private static final String DB = "default";
@@ -174,6 +177,11 @@ public class TestPrestoSqlITCase extends AbstractTestQueryFramework {
                                 new DataField(2, "aCa", new VarCharType()),
                                 new DataField(3, "d", new CharType(1))));
         return new SimpleTableTestHelper(tablePath, rowType);
+    }
+
+    @BeforeTest
+    public void init() throws Exception {
+        queryRunner = createQueryRunner();
     }
 
     @Test
@@ -378,7 +386,7 @@ public class TestPrestoSqlITCase extends AbstractTestQueryFramework {
     }
 
     private String sql(String sql) {
-        MaterializedResult result = getQueryRunner().execute(sql);
+        MaterializedResult result = queryRunner.execute(sql);
         return result.getMaterializedRows().toString();
     }
 }
