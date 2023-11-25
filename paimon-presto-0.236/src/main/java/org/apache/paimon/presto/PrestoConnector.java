@@ -34,7 +34,7 @@ public class PrestoConnector extends PrestoConnectorBase {
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
             PrestoMetadata prestoMetadata) {
-        // Because the 236 version compute push-down api is too low, no implement for the time being.
+        // Presto 236 compute push-down api is too low, not yet impl.
         super(transactionManager, prestoSplitManager, prestoPageSourceProvider, prestoMetadata);
         this.transactionManager = transactionManager;
     }

@@ -64,8 +64,8 @@ import static com.facebook.presto.metadata.FunctionAndTypeManager.createTestFunc
 import static com.facebook.presto.sql.planner.iterative.rule.test.PlanBuilder.expression;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Test for {@link PrestoComputePushdown}. */
-public class PrestoComputePushdownTest {
+/** Test for {@link TestPrestoComputePushdown}. */
+public class TestPrestoComputePushdown {
 
     public static final MetadataManager METADATA = MetadataManager.createTestMetadataManager();
 
