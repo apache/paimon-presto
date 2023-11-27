@@ -53,14 +53,17 @@ public class PrestoComputePushdown implements ConnectorPlanOptimizer {
 
     private final StandardFunctionResolution functionResolution;
     private final RowExpressionService rowExpressionService;
+    private final PaimonConfig config;
 
     public PrestoComputePushdown(
             StandardFunctionResolution functionResolution,
-            RowExpressionService rowExpressionService) {
+            RowExpressionService rowExpressionService,
+            PaimonConfig config) {
 
         this.functionResolution = requireNonNull(functionResolution, "functionResolution is null");
         this.rowExpressionService =
                 requireNonNull(rowExpressionService, "rowExpressionService is null");
+        this.config = requireNonNull(config, "config is null");
     }
 
     @Override
@@ -70,7 +73,10 @@ public class PrestoComputePushdown implements ConnectorPlanOptimizer {
             VariableAllocator variableAllocator,
             PlanNodeIdAllocator idAllocator) {
 
-        return maxSubplan.accept(new Visitor(session, idAllocator), null);
+        if (config.isPaimonPushdownEnabled()) {
+            return maxSubplan.accept(new Visitor(session, idAllocator), null);
+        }
+        return maxSubplan;
     }
 
     private class Visitor extends PlanVisitor<PlanNode, Void> {
