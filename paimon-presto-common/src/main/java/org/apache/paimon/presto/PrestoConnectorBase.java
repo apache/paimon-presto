@@ -22,10 +22,13 @@ import com.facebook.presto.spi.classloader.ThreadContextClassLoader;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.facebook.presto.spi.connector.ConnectorPageSourceProvider;
+import com.facebook.presto.spi.connector.ConnectorPlanOptimizerProvider;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorMetadata;
 import com.facebook.presto.spi.transaction.IsolationLevel;
+
+import java.util.Optional;
 
 import static com.facebook.presto.spi.transaction.IsolationLevel.READ_COMMITTED;
 import static com.facebook.presto.spi.transaction.IsolationLevel.checkConnectorSupports;
@@ -38,17 +41,34 @@ public abstract class PrestoConnectorBase implements Connector {
     private final PrestoSplitManager prestoSplitManager;
     private final PrestoPageSourceProvider prestoPageSourceProvider;
     private final PrestoMetadata prestoMetadata;
+    private final Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider;
 
     public PrestoConnectorBase(
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
             PrestoMetadata prestoMetadata) {
+        this(
+                transactionManager,
+                prestoSplitManager,
+                prestoPageSourceProvider,
+                prestoMetadata,
+                Optional.empty());
+    }
+
+    public PrestoConnectorBase(
+            PrestoTransactionManager transactionManager,
+            PrestoSplitManager prestoSplitManager,
+            PrestoPageSourceProvider prestoPageSourceProvider,
+            PrestoMetadata prestoMetadata,
+            Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider) {
         this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
         this.prestoSplitManager = requireNonNull(prestoSplitManager, "prestoSplitManager is null");
         this.prestoPageSourceProvider =
                 requireNonNull(prestoPageSourceProvider, "prestoPageSourceProvider is null");
         this.prestoMetadata = requireNonNull(prestoMetadata, "prestoMetadata is null");
+        this.prestoPlanOptimizerProvider =
+                requireNonNull(prestoPlanOptimizerProvider, "prestoPlanOptimizerProvider is null");
     }
 
     @Override
@@ -82,5 +102,10 @@ public abstract class PrestoConnectorBase implements Connector {
     @Override
     public void rollback(ConnectorTransactionHandle transaction) {
         transactionManager.remove(transaction);
+    }
+
+    @Override
+    public ConnectorPlanOptimizerProvider getConnectorPlanOptimizerProvider() {
+        return prestoPlanOptimizerProvider.orElseThrow(UnsupportedOperationException::new);
     }
 }

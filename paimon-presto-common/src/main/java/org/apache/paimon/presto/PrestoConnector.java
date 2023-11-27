@@ -25,6 +25,8 @@ import com.facebook.presto.spi.connector.EmptyConnectorCommitHandle;
 
 import javax.inject.Inject;
 
+import java.util.Optional;
+
 /** Presto {@link Connector}. */
 public class PrestoConnector extends PrestoConnectorBase {
 
@@ -35,8 +37,14 @@ public class PrestoConnector extends PrestoConnectorBase {
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
-            PrestoMetadata prestoMetadata) {
-        super(transactionManager, prestoSplitManager, prestoPageSourceProvider, prestoMetadata);
+            PrestoMetadata prestoMetadata,
+            PrestoPlanOptimizerProvider prestoPlanOptimizerProvider) {
+        super(
+                transactionManager,
+                prestoSplitManager,
+                prestoPageSourceProvider,
+                prestoMetadata,
+                Optional.of(prestoPlanOptimizerProvider));
         this.transactionManager = transactionManager;
     }
 

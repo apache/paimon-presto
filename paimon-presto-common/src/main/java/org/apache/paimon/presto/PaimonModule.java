@@ -71,6 +71,7 @@ public class PaimonModule implements Module {
         binder.bind(RowExpressionService.class).toInstance(rowExpressionService);
         binder.bind(Options.class).toInstance(Options.fromMap(config));
         binder.bind(PrestoTransactionManager.class).in(Scopes.SINGLETON);
+        binder.bind(PrestoPlanOptimizerProvider.class).in(Scopes.SINGLETON);
 
         configBinder(binder).bindConfig(PaimonConfig.class);
     }
