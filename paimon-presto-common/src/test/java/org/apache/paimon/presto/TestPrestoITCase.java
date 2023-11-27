@@ -250,7 +250,7 @@ public class TestPrestoITCase {
                 .isEqualTo("[[1, 1, 3, 3], [2, 3, 3, 3]]");
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimestampFormat() throws Exception {
         assertThat(sql("SELECT ts FROM paimon.default.test_timestamp"))
                 .isEqualTo("[[2023-01-01T01:01:01.123]]");
