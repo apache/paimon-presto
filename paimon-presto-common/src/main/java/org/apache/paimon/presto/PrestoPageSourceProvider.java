@@ -78,7 +78,8 @@ public class PrestoPageSourceProvider implements ConnectorPageSourceProvider {
                 .ifPresent(read::withFilter);
 
         try {
-            return new PrestoPageSource(read.newRead().createReader(split.decodeSplit()), columns);
+            return new PrestoPageSource(
+                    read.newRead().executeFilter().createReader(split.decodeSplit()), columns);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
