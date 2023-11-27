@@ -38,7 +38,7 @@ under the License.
         <hadoop.apache2.version>2.7.4-9</hadoop.apache2.version>
         <hive.apache.version>1.2.2-2</hive.apache.version>
         <airlift.version>0.205</airlift.version>
-        <libthrift.version>0.9.3</libthrift.version>
+        <libthrift.version>0.14.0</libthrift.version>
     </properties>
 
     <dependencies>
