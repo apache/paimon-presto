@@ -250,6 +250,8 @@ public class TestPrestoITCase {
                 .isEqualTo("[[1, 1, 3, 3], [2, 3, 3, 3]]");
     }
 
+    // Due to the inconsistency between the testing behavior and the real production environment,
+    // we are temporarily disabling timestamp testing here.
     @Test(enabled = false)
     public void testTimestampFormat() throws Exception {
         assertThat(sql("SELECT ts FROM paimon.default.test_timestamp"))
