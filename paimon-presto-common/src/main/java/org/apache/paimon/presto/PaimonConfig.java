@@ -27,7 +27,7 @@ public class PaimonConfig {
     private String warehouse;
     private String metastore;
     private String uri;
-    private boolean paimonPushdownEnabled;
+    private boolean paimonPushdownEnabled = true;
 
     public String getWarehouse() {
         return warehouse;
