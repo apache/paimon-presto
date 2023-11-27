@@ -52,7 +52,7 @@ import com.facebook.presto.sql.relational.RowExpressionOptimizer;
 import com.facebook.presto.testing.TestingConnectorSession;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -152,13 +152,22 @@ public class TestPrestoComputePushdown {
                 rowExpression);
     }
 
+    private PaimonConfig createPaimonConfig(boolean paimonPushdownEnabled) {
+        PaimonConfig paimonConfig = new PaimonConfig();
+        paimonConfig.setPaimonPushdownEnabled(paimonPushdownEnabled);
+
+        return paimonConfig;
+    }
+
     @Test
     public void testOptimizeFilter() {
         // Mock data.
         PrestoColumnHandle testData = new PrestoColumnHandle("id", "BIGINT", BIGINT);
 
+        PaimonConfig config = createPaimonConfig(true);
+
         PrestoComputePushdown prestoComputePushdown =
-                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE);
+                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE, config);
 
         PlanNode mockInputPlan = createFilterNode();
         ConnectorSession session = new TestingConnectorSession(ImmutableList.of());
@@ -195,6 +204,57 @@ public class TestPrestoComputePushdown {
         projectedColumns.ifPresent(
                 columns ->
                         assertThat(columns.stream().allMatch(testcase -> testcase.equals(testData)))
+                                .isEqualTo(true));
+    }
+
+    @Test
+    public void testNotOptimizeFilter() {
+        // Mock data.
+        PaimonConfig config = createPaimonConfig(false);
+
+        PrestoComputePushdown prestoComputePushdown =
+                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE, config);
+
+        PlanNode mockInputPlan = createFilterNode();
+        ConnectorSession session = new TestingConnectorSession(ImmutableList.of());
+        PlanVariableAllocator variableAllocator = new PlanVariableAllocator();
+        PlanNodeIdAllocator idAllocator = new PlanNodeIdAllocator();
+
+        // Call optimize
+        PlanNode result =
+                prestoComputePushdown.optimize(
+                        mockInputPlan, session, variableAllocator, idAllocator);
+
+        // Optimize result convert.
+        TableScanNode source = (TableScanNode) ((FilterNode) result).getSource();
+        TableHandle table = source.getTable();
+        PrestoTableLayoutHandle prestoTableLayoutHandle =
+                (PrestoTableLayoutHandle)
+                        table.getLayout()
+                                .orElseThrow(
+                                        () -> new IllegalStateException("Layout is not present"));
+
+        // Assert not optimize
+        Optional<TupleDomain<PrestoColumnHandle>> optionalFilter =
+                Optional.ofNullable(prestoTableLayoutHandle.getTableHandle().getFilter());
+        optionalFilter.ifPresent(
+                filter ->
+                        assertThat(
+                                        filter.getDomains().get().keySet().stream()
+                                                .allMatch(
+                                                        testcase ->
+                                                                testcase.equals(TupleDomain.all())))
+                                .isEqualTo(true));
+
+        Optional<List<ColumnHandle>> projectedColumns =
+                prestoTableLayoutHandle.getTableHandle().getProjectedColumns();
+        projectedColumns.ifPresent(
+                columns ->
+                        assertThat(
+                                        columns.stream()
+                                                .allMatch(
+                                                        testcase ->
+                                                                testcase.equals(Optional.empty())))
                                 .isEqualTo(true));
     }
 }

@@ -19,6 +19,7 @@
 package org.apache.paimon.presto;
 
 import com.facebook.airlift.configuration.Config;
+import com.facebook.airlift.configuration.ConfigDescription;
 
 /** Used for configuration item inspection and management. */
 public class PaimonConfig {
@@ -26,6 +27,7 @@ public class PaimonConfig {
     private String warehouse;
     private String metastore;
     private String uri;
+    private boolean paimonPushdownEnabled = true;
 
     public String getWarehouse() {
         return warehouse;
@@ -54,6 +56,17 @@ public class PaimonConfig {
     @Config("uri")
     public PaimonConfig setUri(String uri) {
         this.uri = uri;
+        return this;
+    }
+
+    public boolean isPaimonPushdownEnabled() {
+        return paimonPushdownEnabled;
+    }
+
+    @Config("paimon.query-pushdown-enabled")
+    @ConfigDescription("Enable paimon query pushdown")
+    public PaimonConfig setPaimonPushdownEnabled(boolean paimonPushdownEnabled) {
+        this.paimonPushdownEnabled = paimonPushdownEnabled;
         return this;
     }
 }

@@ -35,19 +35,23 @@ public class PrestoPlanOptimizerProvider implements ConnectorPlanOptimizerProvid
 
     private final StandardFunctionResolution functionResolution;
     private final RowExpressionService rowExpressionService;
+    private final PaimonConfig config;
 
     @Inject
     public PrestoPlanOptimizerProvider(
             StandardFunctionResolution functionResolution,
-            RowExpressionService rowExpressionService) {
+            RowExpressionService rowExpressionService,
+            PaimonConfig config) {
         this.functionResolution = requireNonNull(functionResolution, "functionResolution is null");
         this.rowExpressionService =
                 requireNonNull(rowExpressionService, "rowExpressionService is null");
+        this.config = requireNonNull(config, "config is null");
     }
 
     @Override
     public Set<ConnectorPlanOptimizer> getLogicalPlanOptimizers() {
-        return ImmutableSet.of(new PrestoComputePushdown(functionResolution, rowExpressionService));
+        return ImmutableSet.of(
+                new PrestoComputePushdown(functionResolution, rowExpressionService, config));
     }
 
     @Override
