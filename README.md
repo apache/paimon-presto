@@ -88,6 +88,9 @@ and set the following config:
 connector.name=paimon
 # set your filesystem path, such as hdfs://namenode01:8020/path and s3://${YOUR_S3_BUCKET}/path
 warehouse=${YOUR_FS_PATH}
+
+# Enable paimon query pushdown.
+paimon.query-pushdown-enabled=true
 ```
 
 If you are using HDFS FileSystem, you will also need to do one more thing: choose one of the following ways to configure your HDFS:
