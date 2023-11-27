@@ -20,6 +20,7 @@ package org.apache.paimon.presto;
 
 import org.apache.paimon.data.GenericMap;
 import org.apache.paimon.data.GenericRow;
+import org.apache.paimon.data.Timestamp;
 import org.apache.paimon.fs.Path;
 import org.apache.paimon.fs.local.LocalFileIO;
 import org.apache.paimon.schema.Schema;
@@ -35,6 +36,7 @@ import org.apache.paimon.types.IntType;
 import org.apache.paimon.types.MapType;
 import org.apache.paimon.types.RowKind;
 import org.apache.paimon.types.RowType;
+import org.apache.paimon.types.TimestampType;
 import org.apache.paimon.types.VarCharType;
 
 import com.facebook.presto.testing.MaterializedResult;
@@ -44,6 +46,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.nio.file.Files;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -147,6 +150,30 @@ public class TestPrestoITCase {
             commit.commit(0, writer.prepareCommit(true, 0));
         }
 
+        {
+            // test for timestamp
+            Path tablePath5 = new Path(warehouse, "default.db/test_timestamp");
+            RowType rowType =
+                    new RowType(
+                            Collections.singletonList(new DataField(0, "ts", new TimestampType())));
+            new SchemaManager(LocalFileIO.create(), tablePath5)
+                    .createTable(
+                            new Schema(
+                                    rowType.getFields(),
+                                    Collections.emptyList(),
+                                    Collections.singletonList("ts"),
+                                    new HashMap<>(),
+                                    ""));
+            FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath5);
+            InnerTableWrite writer = table.newWrite("user");
+            InnerTableCommit commit = table.newCommit("user");
+            writer.write(
+                    GenericRow.of(
+                            Timestamp.fromLocalDateTime(
+                                    LocalDateTime.parse("2023-01-01T01:01:01.123"))));
+            commit.commit(0, writer.prepareCommit(true, 0));
+        }
+
         DistributedQueryRunner queryRunner = null;
         try {
             queryRunner =
@@ -221,6 +248,14 @@ public class TestPrestoITCase {
                         sql(
                                 "SELECT pt, a, SUM(b), SUM(d) FROM paimon.default.t3 GROUP BY pt, a ORDER BY pt, a"))
                 .isEqualTo("[[1, 1, 3, 3], [2, 3, 3, 3]]");
+    }
+
+    // Due to the inconsistency between the testing behavior and the real production environment,
+    // we are temporarily disabling timestamp testing here.
+    @Test(enabled = false)
+    public void testTimestampFormat() throws Exception {
+        assertThat(sql("SELECT ts FROM paimon.default.test_timestamp"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
     }
 
     private String sql(String sql) throws Exception {

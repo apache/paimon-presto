@@ -206,7 +206,7 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
                 prestoType.writeLong(
                         output, encodeShortScaledValue(decimal, decimalType.getScale()));
             } else if (prestoType.equals(TIMESTAMP)) {
-                prestoType.writeLong(output, ((Timestamp) value).getMillisecond() * 1_000);
+                prestoType.writeLong(output, ((Timestamp) value).toSQLTimestamp().getTime());
             } else if (prestoType.equals(TIME)) {
                 prestoType.writeLong(output, (int) value * 1_000);
             } else {
