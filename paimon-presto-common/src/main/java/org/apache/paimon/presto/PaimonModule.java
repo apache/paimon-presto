@@ -62,7 +62,6 @@ public class PaimonModule implements Module {
     public void configure(Binder binder) {
         binder.bind(PaimonConnectorId.class).toInstance(new PaimonConnectorId(connectorId));
         binder.bind(TypeManager.class).toInstance(typeManager);
-        binder.bind(PrestoConnector.class).in(Scopes.SINGLETON);
         binder.bind(PrestoMetadata.class).in(Scopes.SINGLETON);
         binder.bind(PrestoSplitManager.class).in(Scopes.SINGLETON);
         binder.bind(PrestoPageSourceProvider.class).in(Scopes.SINGLETON);
@@ -74,5 +73,7 @@ public class PaimonModule implements Module {
         binder.bind(PrestoPlanOptimizerProvider.class).in(Scopes.SINGLETON);
 
         configBinder(binder).bindConfig(PaimonConfig.class);
+
+        binder.bind(PrestoSessionProperties.class).in(Scopes.SINGLETON);
     }
 }

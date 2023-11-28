@@ -26,8 +26,11 @@ import com.facebook.presto.spi.connector.ConnectorPlanOptimizerProvider;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorMetadata;
+import com.facebook.presto.spi.session.PropertyMetadata;
 import com.facebook.presto.spi.transaction.IsolationLevel;
+import com.google.common.collect.ImmutableList;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.facebook.presto.spi.transaction.IsolationLevel.READ_COMMITTED;
@@ -37,6 +40,7 @@ import static java.util.Objects.requireNonNull;
 /** Presto {@link Connector}. */
 public abstract class PrestoConnectorBase implements Connector {
 
+    private final List<PropertyMetadata<?>> sessionProperties;
     private final PrestoTransactionManager transactionManager;
     private final PrestoSplitManager prestoSplitManager;
     private final PrestoPageSourceProvider prestoPageSourceProvider;
@@ -44,24 +48,15 @@ public abstract class PrestoConnectorBase implements Connector {
     private final Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider;
 
     public PrestoConnectorBase(
-            PrestoTransactionManager transactionManager,
-            PrestoSplitManager prestoSplitManager,
-            PrestoPageSourceProvider prestoPageSourceProvider,
-            PrestoMetadata prestoMetadata) {
-        this(
-                transactionManager,
-                prestoSplitManager,
-                prestoPageSourceProvider,
-                prestoMetadata,
-                Optional.empty());
-    }
-
-    public PrestoConnectorBase(
+            List<PropertyMetadata<?>> sessionProperties,
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
             PrestoMetadata prestoMetadata,
             Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider) {
+        this.sessionProperties =
+                ImmutableList.copyOf(
+                        requireNonNull(sessionProperties, "sessionProperties is null"));
         this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
         this.prestoSplitManager = requireNonNull(prestoSplitManager, "prestoSplitManager is null");
         this.prestoPageSourceProvider =
@@ -107,5 +102,10 @@ public abstract class PrestoConnectorBase implements Connector {
     @Override
     public ConnectorPlanOptimizerProvider getConnectorPlanOptimizerProvider() {
         return prestoPlanOptimizerProvider.orElseThrow(UnsupportedOperationException::new);
+    }
+
+    @Override
+    public List<PropertyMetadata<?>> getSessionProperties() {
+        return sessionProperties;
     }
 }

@@ -20,9 +20,11 @@ package org.apache.paimon.presto;
 
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
+import com.facebook.presto.spi.session.PropertyMetadata;
 
 import javax.inject.Inject;
 
+import java.util.List;
 import java.util.Optional;
 
 /** Presto {@link Connector}. */
@@ -32,17 +34,19 @@ public class PrestoConnector extends PrestoConnectorBase {
 
     @Inject
     public PrestoConnector(
+            List<PropertyMetadata<?>> sessionProperties,
             PrestoTransactionManager transactionManager,
             PrestoSplitManager prestoSplitManager,
             PrestoPageSourceProvider prestoPageSourceProvider,
             PrestoMetadata prestoMetadata,
-            PrestoPlanOptimizerProvider prestoPlanOptimizerProvider) {
+            Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider) {
         super(
+                sessionProperties,
                 transactionManager,
                 prestoSplitManager,
                 prestoPageSourceProvider,
                 prestoMetadata,
-                Optional.of(prestoPlanOptimizerProvider));
+                prestoPlanOptimizerProvider);
         this.transactionManager = transactionManager;
     }
 
