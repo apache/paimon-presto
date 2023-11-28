@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.testng.annotations.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -159,18 +160,29 @@ public class TestPrestoComputePushdown {
         return paimonConfig;
     }
 
+    private Map<String, Object> createPrestoSessionConfig(PaimonConfig config) {
+        Map<String, Object> sessionConfig = new HashMap<>();
+        sessionConfig.put(
+                PrestoSessionProperties.QUERY_PUSHDOWN_ENABLED, config.isPaimonPushdownEnabled());
+        return sessionConfig;
+    }
+
     @Test
     public void testOptimizeFilter() {
         // Mock data.
         PrestoColumnHandle testData = new PrestoColumnHandle("id", "BIGINT", BIGINT);
 
         PaimonConfig config = createPaimonConfig(true);
+        PrestoSessionProperties prestoSessionProperties = new PrestoSessionProperties(config);
+        Map<String, Object> prestoSessionConfig = createPrestoSessionConfig(config);
 
         PrestoComputePushdown prestoComputePushdown =
-                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE, config);
+                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE);
 
         PlanNode mockInputPlan = createFilterNode();
-        ConnectorSession session = new TestingConnectorSession(ImmutableList.of());
+        ConnectorSession session =
+                new TestingConnectorSession(
+                        prestoSessionProperties.getSessionProperties(), prestoSessionConfig);
         PlanVariableAllocator variableAllocator = new PlanVariableAllocator();
         PlanNodeIdAllocator idAllocator = new PlanNodeIdAllocator();
 
@@ -211,12 +223,16 @@ public class TestPrestoComputePushdown {
     public void testNotOptimizeFilter() {
         // Mock data.
         PaimonConfig config = createPaimonConfig(false);
+        PrestoSessionProperties prestoSessionProperties = new PrestoSessionProperties(config);
+        Map<String, Object> prestoSessionConfig = createPrestoSessionConfig(config);
 
         PrestoComputePushdown prestoComputePushdown =
-                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE, config);
+                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE);
 
         PlanNode mockInputPlan = createFilterNode();
-        ConnectorSession session = new TestingConnectorSession(ImmutableList.of());
+        ConnectorSession session =
+                new TestingConnectorSession(
+                        prestoSessionProperties.getSessionProperties(), prestoSessionConfig);
         PlanVariableAllocator variableAllocator = new PlanVariableAllocator();
         PlanNodeIdAllocator idAllocator = new PlanNodeIdAllocator();
 

@@ -47,23 +47,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static org.apache.paimon.presto.PrestoSessionProperties.isPaimonPushdownEnabled;
 
 /** PrestoComputePushdown. */
 public class PrestoComputePushdown implements ConnectorPlanOptimizer {
 
     private final StandardFunctionResolution functionResolution;
     private final RowExpressionService rowExpressionService;
-    private final PaimonConfig config;
 
     public PrestoComputePushdown(
             StandardFunctionResolution functionResolution,
-            RowExpressionService rowExpressionService,
-            PaimonConfig config) {
+            RowExpressionService rowExpressionService) {
 
         this.functionResolution = requireNonNull(functionResolution, "functionResolution is null");
         this.rowExpressionService =
                 requireNonNull(rowExpressionService, "rowExpressionService is null");
-        this.config = requireNonNull(config, "config is null");
     }
 
     @Override
@@ -73,7 +71,7 @@ public class PrestoComputePushdown implements ConnectorPlanOptimizer {
             VariableAllocator variableAllocator,
             PlanNodeIdAllocator idAllocator) {
 
-        if (config.isPaimonPushdownEnabled()) {
+        if (isPaimonPushdownEnabled(session)) {
             return maxSubplan.accept(new Visitor(session, idAllocator), null);
         }
         return maxSubplan;

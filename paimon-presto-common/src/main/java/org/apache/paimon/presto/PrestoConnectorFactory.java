@@ -28,6 +28,7 @@ import com.google.inject.Injector;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Throwables.throwIfUnchecked;
 import static java.util.Objects.requireNonNull;
@@ -74,7 +75,24 @@ public class PrestoConnectorFactory implements ConnectorFactory {
             }
             Injector injector = bootstrap.initialize();
 
-            return injector.getInstance(PrestoConnector.class);
+            PrestoSessionProperties prestoSessionProperties =
+                    injector.getInstance(PrestoSessionProperties.class);
+            PrestoTransactionManager prestoTransactionManager =
+                    injector.getInstance(PrestoTransactionManager.class);
+            PrestoSplitManager prestoSplitManager = injector.getInstance(PrestoSplitManager.class);
+            PrestoPageSourceProvider prestoPageSourceProvider =
+                    injector.getInstance(PrestoPageSourceProvider.class);
+            PrestoMetadata prestoMetadata = injector.getInstance(PrestoMetadata.class);
+            PrestoPlanOptimizerProvider prestoPlanOptimizerProvider =
+                    injector.getInstance(PrestoPlanOptimizerProvider.class);
+
+            return new PrestoConnector(
+                    prestoSessionProperties.getSessionProperties(),
+                    prestoTransactionManager,
+                    prestoSplitManager,
+                    prestoPageSourceProvider,
+                    prestoMetadata,
+                    Optional.of(prestoPlanOptimizerProvider));
         } catch (Exception e) {
             throwIfUnchecked(e);
             throw new RuntimeException(e);
