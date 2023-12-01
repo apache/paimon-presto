@@ -42,7 +42,7 @@ public class PrestoSplitManager implements ConnectorSplitManager {
             SplitSchedulingContext splitSchedulingContext) {
 
         PrestoTableHandle tableHandle = ((PrestoTableLayoutHandle) layout).getTableHandle();
-        Table table = tableHandle.table();
+        Table table = tableHandle.tableWithDynamicOptions(session);
         ReadBuilder readBuilder = table.newReadBuilder();
         new PrestoFilterConverter(table.rowType())
                 .convert(tableHandle.getFilter())

@@ -28,18 +28,22 @@ import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorMetadata;
 import com.facebook.presto.spi.session.PropertyMetadata;
 import com.facebook.presto.spi.transaction.IsolationLevel;
-import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static com.facebook.presto.spi.transaction.IsolationLevel.READ_COMMITTED;
 import static com.facebook.presto.spi.transaction.IsolationLevel.checkConnectorSupports;
 import static java.util.Objects.requireNonNull;
+import static org.apache.paimon.CoreOptions.SCAN_SNAPSHOT_ID;
+import static org.apache.paimon.CoreOptions.SCAN_TIMESTAMP_MILLIS;
+import static org.apache.paimon.presto.PrestoTableHandle.SCAN_DATETIME;
+import static org.apache.paimon.presto.PrestoTableHandle.SCAN_SNAPSHOT;
+import static org.apache.paimon.presto.PrestoTableHandle.SCAN_TIMESTAMP;
 
 /** Presto {@link Connector}. */
 public abstract class PrestoConnectorBase implements Connector {
-
     private final List<PropertyMetadata<?>> sessionProperties;
     private final PrestoTransactionManager transactionManager;
     private final PrestoSplitManager prestoSplitManager;
@@ -54,9 +58,8 @@ public abstract class PrestoConnectorBase implements Connector {
             PrestoPageSourceProvider prestoPageSourceProvider,
             PrestoMetadata prestoMetadata,
             Optional<PrestoPlanOptimizerProvider> prestoPlanOptimizerProvider) {
-        this.sessionProperties =
-                ImmutableList.copyOf(
-                        requireNonNull(sessionProperties, "sessionProperties is null"));
+
+        this.sessionProperties = buildProperties(sessionProperties);
         this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
         this.prestoSplitManager = requireNonNull(prestoSplitManager, "prestoSplitManager is null");
         this.prestoPageSourceProvider =
@@ -64,6 +67,33 @@ public abstract class PrestoConnectorBase implements Connector {
         this.prestoMetadata = requireNonNull(prestoMetadata, "prestoMetadata is null");
         this.prestoPlanOptimizerProvider =
                 requireNonNull(prestoPlanOptimizerProvider, "prestoPlanOptimizerProvider is null");
+    }
+
+    /**
+     * add ext support props.
+     *
+     * @param sessionProperties
+     * @return
+     */
+    private List<PropertyMetadata<?>> buildProperties(List<PropertyMetadata<?>> sessionProperties) {
+        String datetimeDescription =
+                "Will automatically convert to parameter： scan_timestamp_millis";
+        List<PropertyMetadata<?>> props = new ArrayList<>();
+        props.add(PropertyMetadata.stringProperty(SCAN_DATETIME, datetimeDescription, null, true));
+        props.add(
+                PropertyMetadata.longProperty(
+                        SCAN_TIMESTAMP,
+                        SCAN_TIMESTAMP_MILLIS.description().toString(),
+                        null,
+                        true));
+        props.add(
+                PropertyMetadata.longProperty(
+                        SCAN_SNAPSHOT, SCAN_SNAPSHOT_ID.description().toString(), null, true));
+
+        if (sessionProperties != null) {
+            props.addAll(sessionProperties);
+        }
+        return props;
     }
 
     @Override
