@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.data.Decimal;
 import org.apache.paimon.data.GenericMap;
 import org.apache.paimon.data.GenericRow;
 import org.apache.paimon.data.Timestamp;
@@ -32,6 +33,7 @@ import org.apache.paimon.table.sink.InnerTableWrite;
 import org.apache.paimon.types.BigIntType;
 import org.apache.paimon.types.CharType;
 import org.apache.paimon.types.DataField;
+import org.apache.paimon.types.DecimalType;
 import org.apache.paimon.types.IntType;
 import org.apache.paimon.types.MapType;
 import org.apache.paimon.types.RowKind;
@@ -45,6 +47,7 @@ import com.facebook.presto.tests.DistributedQueryRunner;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -174,6 +177,32 @@ public class TestPrestoITCase {
             commit.commit(0, writer.prepareCommit(true, 0));
         }
 
+        {
+            // test for decimal
+            Path tablePath5 = new Path(warehouse, "default.db/test_decimal");
+            RowType rowType =
+                    new RowType(
+                            Arrays.asList(
+                                    new DataField(0, "c1", new DecimalType(20, 0)),
+                                    new DataField(1, "c2", new DecimalType(6, 3))));
+            new SchemaManager(LocalFileIO.create(), tablePath5)
+                    .createTable(
+                            new Schema(
+                                    rowType.getFields(),
+                                    Collections.emptyList(),
+                                    Arrays.asList("c1", "c2"),
+                                    new HashMap<>(),
+                                    ""));
+            FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath5);
+            InnerTableWrite writer = table.newWrite("user");
+            InnerTableCommit commit = table.newCommit("user");
+            writer.write(
+                    GenericRow.of(
+                            Decimal.fromBigDecimal(new BigDecimal("10000000000"), 20, 0),
+                            Decimal.fromBigDecimal(new BigDecimal("123.456"), 6, 3)));
+            commit.commit(0, writer.prepareCommit(true, 0));
+        }
+
         DistributedQueryRunner queryRunner = null;
         try {
             queryRunner =
@@ -256,6 +285,12 @@ public class TestPrestoITCase {
     public void testTimestampFormat() throws Exception {
         assertThat(sql("SELECT ts FROM paimon.default.test_timestamp"))
                 .isEqualTo("[[2023-01-01T01:01:01.123]]");
+    }
+
+    @Test
+    public void testDecimal() throws Exception {
+        assertThat(sql("SELECT c1, c2 FROM paimon.default.test_decimal"))
+                .isEqualTo("[[10000000000, 123.456]]");
     }
 
     private String sql(String sql) throws Exception {
