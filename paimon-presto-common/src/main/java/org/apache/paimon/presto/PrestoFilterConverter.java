@@ -19,9 +19,10 @@
 package org.apache.paimon.presto;
 
 import org.apache.paimon.data.BinaryString;
+import org.apache.paimon.data.Decimal;
+import org.apache.paimon.data.Timestamp;
 import org.apache.paimon.predicate.Predicate;
 import org.apache.paimon.predicate.PredicateBuilder;
-import org.apache.paimon.shade.guava30.com.google.common.base.Preconditions;
 import org.apache.paimon.types.RowType;
 
 import com.facebook.presto.common.predicate.Domain;
@@ -33,25 +34,28 @@ import com.facebook.presto.common.type.BooleanType;
 import com.facebook.presto.common.type.CharType;
 import com.facebook.presto.common.type.DateType;
 import com.facebook.presto.common.type.DecimalType;
-import com.facebook.presto.common.type.Decimals;
 import com.facebook.presto.common.type.DoubleType;
 import com.facebook.presto.common.type.IntegerType;
 import com.facebook.presto.common.type.MapType;
 import com.facebook.presto.common.type.RealType;
+import com.facebook.presto.common.type.SqlTimestampWithTimeZone;
 import com.facebook.presto.common.type.TimeType;
 import com.facebook.presto.common.type.TimestampType;
+import com.facebook.presto.common.type.TimestampWithTimeZoneType;
 import com.facebook.presto.common.type.Type;
 import com.facebook.presto.common.type.VarbinaryType;
 import com.facebook.presto.common.type.VarcharType;
 import io.airlift.slice.Slice;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /** Presto filter to Paimon predicate. */
 public class PrestoFilterConverter {
@@ -208,8 +212,23 @@ public class PrestoFilterConverter {
             return Math.toIntExact(((Long) prestoNativeValue));
         }
 
-        if (type instanceof TimestampType || type instanceof TimeType) {
-            return TimeUnit.MILLISECONDS.toMicros((Long) prestoNativeValue);
+        if (type instanceof TimeType) {
+            return Timestamp.fromEpochMillis((Long) prestoNativeValue);
+        }
+
+        if (type instanceof TimestampType) {
+            return Timestamp.fromLocalDateTime(
+                    Instant.ofEpochMilli((Long) prestoNativeValue)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime());
+        }
+
+        if (type instanceof TimestampWithTimeZoneType) {
+            if (prestoNativeValue instanceof Long) {
+                return prestoNativeValue;
+            }
+            return Timestamp.fromEpochMillis(
+                    ((SqlTimestampWithTimeZone) prestoNativeValue).getMillisUtc());
         }
 
         if (type instanceof VarcharType || type instanceof CharType) {
@@ -221,23 +240,18 @@ public class PrestoFilterConverter {
         }
 
         if (type instanceof DecimalType) {
+            // Refer to trino.
             DecimalType decimalType = (DecimalType) type;
-            Object value =
-                    Objects.requireNonNull(
-                            prestoNativeValue, "The prestoNativeValue must be non-null");
-            if (Decimals.isShortDecimal(decimalType)) {
-                Preconditions.checkArgument(
-                        value instanceof Long,
-                        "A short decimal should be represented by a Long value but was %s",
-                        value.getClass().getName());
-                return BigDecimal.valueOf((long) value).movePointLeft(decimalType.getScale());
+            BigDecimal bigDecimal;
+            if (prestoNativeValue instanceof Long) {
+                bigDecimal =
+                        BigDecimal.valueOf((long) prestoNativeValue)
+                                .movePointLeft(decimalType.getScale());
+            } else {
+                bigDecimal = new BigDecimal((BigInteger) prestoNativeValue, decimalType.getScale());
             }
-            Preconditions.checkArgument(
-                    value instanceof Slice,
-                    "A long decimal should be represented by a Slice value but was %s",
-                    value.getClass().getName());
-            return new BigDecimal(
-                    Decimals.decodeUnscaledValue((Slice) value), decimalType.getScale());
+            return Decimal.fromBigDecimal(
+                    bigDecimal, decimalType.getPrecision(), decimalType.getScale());
         }
 
         throw new UnsupportedOperationException("Unsupported type: " + type);
