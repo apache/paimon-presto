@@ -182,7 +182,6 @@ public class TestPrestoITCase {
                                     LocalDateTime.parse("2023-01-01T01:01:01.123")),
                             Timestamp.fromMicros(
                                     1672534861123000L))); // 2023-01-01T01:01:01.123 Pacific/Apia
-            // conversion
             commit.commit(0, writer.prepareCommit(true, 0));
         }
 
