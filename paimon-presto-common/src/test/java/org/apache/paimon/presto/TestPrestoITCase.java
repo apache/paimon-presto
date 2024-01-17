@@ -46,6 +46,7 @@ import com.facebook.presto.testing.QueryRunner;
 import com.facebook.presto.testing.TestingSession;
 import com.facebook.presto.tests.DistributedQueryRunner;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -240,12 +241,15 @@ public class TestPrestoITCase {
         return new SimpleTableTestHelper(tablePath, rowType);
     }
 
-    @BeforeTest
-    public void init() throws Exception {
+    @BeforeSuite
+    public void setup() throws Exception {
         // Set the presto-tests of default Timezone key for the current jvm.
         // Because ut related to timestamps will be affected by the default Timezone.
         TimeZone.setDefault(TimeZone.getTimeZone(TestingSession.DEFAULT_TIME_ZONE_KEY.getId()));
+    }
 
+    @BeforeTest
+    public void init() throws Exception {
         queryRunner = createQueryRunner();
     }
 
