@@ -34,6 +34,7 @@ import com.facebook.presto.common.type.BooleanType;
 import com.facebook.presto.common.type.CharType;
 import com.facebook.presto.common.type.DateType;
 import com.facebook.presto.common.type.DecimalType;
+import com.facebook.presto.common.type.Decimals;
 import com.facebook.presto.common.type.DoubleType;
 import com.facebook.presto.common.type.IntegerType;
 import com.facebook.presto.common.type.MapType;
@@ -48,7 +49,6 @@ import com.facebook.presto.common.type.VarcharType;
 import io.airlift.slice.Slice;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -213,7 +213,7 @@ public class PrestoFilterConverter {
         }
 
         if (type instanceof TimeType) {
-            return Timestamp.fromEpochMillis((Long) prestoNativeValue);
+            return (int) ((long) prestoNativeValue / 1_000);
         }
 
         if (type instanceof TimestampType) {
@@ -248,7 +248,10 @@ public class PrestoFilterConverter {
                         BigDecimal.valueOf((long) prestoNativeValue)
                                 .movePointLeft(decimalType.getScale());
             } else {
-                bigDecimal = new BigDecimal((BigInteger) prestoNativeValue, decimalType.getScale());
+                bigDecimal =
+                        new BigDecimal(
+                                Decimals.decodeUnscaledValue((Slice) prestoNativeValue),
+                                decimalType.getScale());
             }
             return Decimal.fromBigDecimal(
                     bigDecimal, decimalType.getPrecision(), decimalType.getScale());

@@ -430,6 +430,9 @@ public class TestPrestoITCase {
         assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 = 123.456"))
                 .isEqualTo("[[123.456]]");
 
+        assertThat(sql("SELECT c1 FROM paimon.default.test_decimal where c1 = 10000000000"))
+                .isEqualTo("[[10000000000]]");
+
         // Test gt and gte.
         assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 > 123"))
                 .isEqualTo("[[123.456]]");
@@ -443,6 +446,9 @@ public class TestPrestoITCase {
         assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 >= 123.456"))
                 .isEqualTo("[[123.456]]");
 
+        assertThat(sql("SELECT c1 FROM paimon.default.test_decimal where c1 >= 10000000000"))
+                .isEqualTo("[[10000000000]]");
+
         // Test lt and lte.
         assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 < 124"))
                 .isEqualTo("[[123.456]]");
@@ -455,6 +461,9 @@ public class TestPrestoITCase {
 
         assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 <= 123.457"))
                 .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c1 FROM paimon.default.test_decimal where c1 <= 10000000000"))
+                .isEqualTo("[[10000000000]]");
 
         // Test gt and lt.
         assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 > 123 and c2 < 666"))
@@ -471,6 +480,11 @@ public class TestPrestoITCase {
         // Test gte and lt.
         assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 >= 123 and c2 < 666"))
                 .isEqualTo("[[123.456]]");
+
+        assertThat(
+                        sql(
+                                "SELECT c1 FROM paimon.default.test_decimal where c1 >= 10000000000 and c1 < 10000000001"))
+                .isEqualTo("[[10000000000]]");
     }
 
     private String sql(String sql) throws Exception {
