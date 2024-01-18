@@ -41,9 +41,9 @@ import org.apache.paimon.types.RowType;
 import org.apache.paimon.types.TimestampType;
 import org.apache.paimon.types.VarCharType;
 
+import com.facebook.presto.common.type.TimeZoneKey;
 import com.facebook.presto.testing.MaterializedResult;
 import com.facebook.presto.testing.QueryRunner;
-import com.facebook.presto.testing.TestingSession;
 import com.facebook.presto.tests.DistributedQueryRunner;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeSuite;
@@ -53,7 +53,9 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -181,8 +183,10 @@ public class TestPrestoITCase {
                     GenericRow.of(
                             Timestamp.fromLocalDateTime(
                                     LocalDateTime.parse("2023-01-01T01:01:01.123")),
-                            Timestamp.fromMicros(
-                                    1672534861123000L))); // 2023-01-01T01:01:01.123 Pacific/Apia
+                            Timestamp.fromLocalDateTime(
+                                    Instant.ofEpochMilli(1672534861123L)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalDateTime()))); // 2023-01-01T01:01:01.123 UTC
             commit.commit(0, writer.prepareCommit(true, 0));
         }
 
@@ -216,7 +220,13 @@ public class TestPrestoITCase {
         try {
             queryRunner =
                     DistributedQueryRunner.builder(
-                                    testSessionBuilder().setCatalog(CATALOG).setSchema(DB).build())
+                                    testSessionBuilder()
+                                            .setTimeZoneKey(
+                                                    TimeZoneKey.getTimeZoneKey(
+                                                            ZoneId.systemDefault().getId()))
+                                            .setCatalog(CATALOG)
+                                            .setSchema(DB)
+                                            .build())
                             .build();
             queryRunner.installPlugin(new PrestoPlugin());
             Map<String, String> options = new HashMap<>();
@@ -243,9 +253,8 @@ public class TestPrestoITCase {
 
     @BeforeSuite
     public void setup() throws Exception {
-        // Set the presto-tests of default Timezone key for the current jvm.
-        // Because ut related to timestamps will be affected by the default Timezone.
-        TimeZone.setDefault(TimeZone.getTimeZone(TestingSession.DEFAULT_TIME_ZONE_KEY.getId()));
+        // Change the default time zone for presto-tests, like Trino.
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     @BeforeTest
@@ -317,23 +326,25 @@ public class TestPrestoITCase {
 
     @Test
     public void testTimestampPredicateWithTimezone() throws Exception {
-        // Use other Timezone unable to find data, as UTC.
-        assertThat(
-                        sql(
-                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
-                                        + "where ts = TIMESTAMP '2023-01-01 01:01:01.123 UTC'"))
-                .isEqualTo("[]");
-
-        // This Pacific/Apia is presto-tests default Timezone.
+        // Pacific/Apia
         assertThat(
                         sql(
                                 "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
                                         + "where ts = TIMESTAMP '2023-01-01 01:01:01.123 Pacific/Apia'"))
+                .isEqualTo("[]");
+
+        // UTC
+        assertThat(
+                        sql(
+                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
+                                        + "where ts = TIMESTAMP '2023-01-01 01:01:01.123 UTC'"))
                 .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
     }
 
     @Test
     public void testTimestampPredicateEq() throws Exception {
+        // In UT 1672534861123 is 2023-01-01T01:01:01.123 UTC.
+
         assertThat(
                         sql(
                                 "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
@@ -351,8 +362,8 @@ public class TestPrestoITCase {
                                 "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
                                         + "WHERE ts_long_0 = date_add("
                                         + "'millisecond', "
-                                        + "CAST(1672484461123 % 1000 AS INTEGER), "
-                                        + "from_unixtime(CAST(1672484461123 / 1000 AS BIGINT))"
+                                        + "CAST(1672534861123 % 1000 AS INTEGER), "
+                                        + "from_unixtime(CAST(1672534861123 / 1000 AS BIGINT))"
                                         + ")"))
                 .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
 
@@ -362,8 +373,8 @@ public class TestPrestoITCase {
                                         + "WHERE ts = TIMESTAMP '2023-01-01 01:01:01.123' "
                                         + "AND ts_long_0 = date_add("
                                         + "'millisecond', "
-                                        + "CAST(1672484461123 % 1000 AS INTEGER), "
-                                        + "from_unixtime(CAST(1672484461123 / 1000 AS BIGINT)))"))
+                                        + "CAST(1672534861123 % 1000 AS INTEGER), "
+                                        + "from_unixtime(CAST(1672534861123 / 1000 AS BIGINT)))"))
                 .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
     }
 
