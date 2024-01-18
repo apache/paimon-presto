@@ -245,7 +245,7 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
             Verify.verify(isLongDecimal(type), "The type should be long decimal");
             DecimalType decimalType = (DecimalType) type;
             BigDecimal decimal = ((Decimal) value).toBigDecimal();
-            type.writeObject(output, Decimals.encodeScaledValue(decimal, decimalType.getScale()));
+            type.writeSlice(output, Decimals.encodeScaledValue(decimal, decimalType.getScale()));
         } else {
             throw new PrestoException(
                     GENERIC_INTERNAL_ERROR,

@@ -17,7 +17,7 @@ mvn clean install -DskipTests
 During the packaging process, you may encounter the following errors: 
 
 ```
-[ERROR] Failed to execute goal on project paimon-presto: Could not resolve dependencies for project org.apache.paimon:paimon-presto:pom:0.6-SNAPSHOT: The following artifacts could not be resolved: org.apache.paimon:paimon-bundle:jar:0.6-SNAPSHOT (absent): Could not find artifact org.apache.paimon:paimon-bundle:jar:0.6-SNAPSHOT in xxx
+[ERROR] Failed to execute goal on project paimon-presto: Could not resolve dependencies for project org.apache.paimon:paimon-presto:pom:0.7-SNAPSHOT: The following artifacts could not be resolved: org.apache.paimon:paimon-bundle:jar:0.7-SNAPSHOT (absent): Could not find artifact org.apache.paimon:paimon-bundle:jar:0.7-SNAPSHOT in xxx
 ```
 
 You can resolve the packaging issue by adding the following Maven repository addresses to your `settings.xml` or to the `pom.xml` of the current project: 
@@ -41,9 +41,9 @@ After the packaging is complete, you can choose the corresponding connector base
 
 | Version         | Package                                                                       |
 |-----------------|-------------------------------------------------------------------------------|
-| [0.236, 0.268)  | `./paimon-presto-0.236/target/paimon-presto-0.236-0.6-SNAPSHOT-plugin.tar.gz` |
-| [0.268, 0.273)  | `./paimon-presto-0.268/target/paimon-presto-0.268-0.6-SNAPSHOT-plugin.tar.gz` |
-| [0.273, latest] | `./paimon-presto-0.273/target/paimon-presto-0.273-0.6-SNAPSHOT-plugin.tar.gz` |
+| [0.236, 0.268)  | `./paimon-presto-0.236/target/paimon-presto-0.236-0.7-SNAPSHOT-plugin.tar.gz` |
+| [0.268, 0.273)  | `./paimon-presto-0.268/target/paimon-presto-0.268-0.7-SNAPSHOT-plugin.tar.gz` |
+| [0.273, latest] | `./paimon-presto-0.273/target/paimon-presto-0.273-0.7-SNAPSHOT-plugin.tar.gz` |
 
 Of course, we also support different versions of Hive and Hadoop. But note that we utilize 
 Presto-shaded versions of Hive and Hadoop packages to address dependency conflicts. 
