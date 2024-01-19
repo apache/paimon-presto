@@ -41,19 +41,26 @@ import org.apache.paimon.types.RowType;
 import org.apache.paimon.types.TimestampType;
 import org.apache.paimon.types.VarCharType;
 
+import com.facebook.presto.common.type.TimeZoneKey;
 import com.facebook.presto.testing.MaterializedResult;
 import com.facebook.presto.testing.QueryRunner;
 import com.facebook.presto.tests.DistributedQueryRunner;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static com.facebook.airlift.testing.Closeables.closeAllSuppress;
@@ -158,7 +165,9 @@ public class TestPrestoITCase {
             Path tablePath5 = new Path(warehouse, "default.db/test_timestamp");
             RowType rowType =
                     new RowType(
-                            Collections.singletonList(new DataField(0, "ts", new TimestampType())));
+                            Arrays.asList(
+                                    new DataField(0, "ts", new TimestampType()),
+                                    new DataField(1, "ts_long_0", new TimestampType())));
             new SchemaManager(LocalFileIO.create(), tablePath5)
                     .createTable(
                             new Schema(
@@ -173,7 +182,11 @@ public class TestPrestoITCase {
             writer.write(
                     GenericRow.of(
                             Timestamp.fromLocalDateTime(
-                                    LocalDateTime.parse("2023-01-01T01:01:01.123"))));
+                                    LocalDateTime.parse("2023-01-01T01:01:01.123")),
+                            Timestamp.fromLocalDateTime(
+                                    Instant.ofEpochMilli(1672534861123L)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalDateTime()))); // 2023-01-01T01:01:01.123 UTC
             commit.commit(0, writer.prepareCommit(true, 0));
         }
 
@@ -207,7 +220,13 @@ public class TestPrestoITCase {
         try {
             queryRunner =
                     DistributedQueryRunner.builder(
-                                    testSessionBuilder().setCatalog(CATALOG).setSchema(DB).build())
+                                    testSessionBuilder()
+                                            .setTimeZoneKey(
+                                                    TimeZoneKey.getTimeZoneKey(
+                                                            ZoneId.systemDefault().getId()))
+                                            .setCatalog(CATALOG)
+                                            .setSchema(DB)
+                                            .build())
                             .build();
             queryRunner.installPlugin(new PrestoPlugin());
             Map<String, String> options = new HashMap<>();
@@ -232,9 +251,21 @@ public class TestPrestoITCase {
         return new SimpleTableTestHelper(tablePath, rowType);
     }
 
+    @BeforeSuite
+    public void setup() throws Exception {
+        // Change the default time zone for presto-tests, like Trino.
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
+
     @BeforeTest
     public void init() throws Exception {
         queryRunner = createQueryRunner();
+    }
+
+    @AfterTest
+    public void clear() throws IOException {
+        // TODO Delete default.db
+        queryRunner.close();
     }
 
     @Test
@@ -279,18 +310,196 @@ public class TestPrestoITCase {
                 .isEqualTo("[[1, 1, 3, 3], [2, 3, 3, 3]]");
     }
 
-    // Due to the inconsistency between the testing behavior and the real production environment,
-    // we are temporarily disabling timestamp testing here.
-    @Test(enabled = false)
+    @Test
     public void testTimestampFormat() throws Exception {
-        assertThat(sql("SELECT ts FROM paimon.default.test_timestamp"))
-                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+        assertThat(
+                        sql(
+                                "SELECT ts, format_datetime(ts, 'yyyy-MM-dd HH:mm:ss') FROM paimon.default.test_timestamp"))
+                .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01 01:01:01]]");
     }
 
     @Test
     public void testDecimal() throws Exception {
         assertThat(sql("SELECT c1, c2 FROM paimon.default.test_decimal"))
                 .isEqualTo("[[10000000000, 123.456]]");
+    }
+
+    @Test
+    public void testTimestampPredicateWithTimezone() throws Exception {
+        // Pacific/Apia
+        assertThat(
+                        sql(
+                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
+                                        + "where ts = TIMESTAMP '2023-01-01 01:01:01.123 Pacific/Apia'"))
+                .isEqualTo("[]");
+
+        // UTC
+        assertThat(
+                        sql(
+                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
+                                        + "where ts = TIMESTAMP '2023-01-01 01:01:01.123 UTC'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
+    }
+
+    @Test
+    public void testTimestampPredicateEq() throws Exception {
+        // In UT 1672534861123 is 2023-01-01T01:01:01.123 UTC.
+
+        assertThat(
+                        sql(
+                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
+                                        + "where ts = TIMESTAMP '2023-01-01 01:01:01.123'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
+
+        assertThat(
+                        sql(
+                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
+                                        + "where ts = TIMESTAMP '2023-01-01 01:01:01.123'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
+
+        assertThat(
+                        sql(
+                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
+                                        + "WHERE ts_long_0 = date_add("
+                                        + "'millisecond', "
+                                        + "CAST(1672534861123 % 1000 AS INTEGER), "
+                                        + "from_unixtime(CAST(1672534861123 / 1000 AS BIGINT))"
+                                        + ")"))
+                .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
+
+        assertThat(
+                        sql(
+                                "SELECT ts, ts_long_0 FROM paimon.default.test_timestamp "
+                                        + "WHERE ts = TIMESTAMP '2023-01-01 01:01:01.123' "
+                                        + "AND ts_long_0 = date_add("
+                                        + "'millisecond', "
+                                        + "CAST(1672534861123 % 1000 AS INTEGER), "
+                                        + "from_unixtime(CAST(1672534861123 / 1000 AS BIGINT)))"))
+                .isEqualTo("[[2023-01-01T01:01:01.123, 2023-01-01T01:01:01.123]]");
+    }
+
+    @Test
+    public void testTimestampPredicate() throws Exception {
+        // Test gt and gte.
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts > TIMESTAMP '2023-01-01 01:01:01'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts >= TIMESTAMP '2023-01-01 01:01:01.123'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+
+        // Test lt and lte.
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts < TIMESTAMP '2023-01-01 01:01:02'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts <= TIMESTAMP '2023-01-01 01:01:01.123'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+
+        // Test gt and lt.
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts > TIMESTAMP '2023-01-01 01:01:00' "
+                                        + "and ts < TIMESTAMP '2023-01-01 01:01:02'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+
+        // Test gt and lte.
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts > TIMESTAMP '2023-01-01 01:01:00' "
+                                        + "and ts <= TIMESTAMP '2023-01-01 01:01:01.123'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+
+        // Test gte and lte.
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts >= TIMESTAMP '2023-01-01 01:01:01.123' "
+                                        + "and ts <= TIMESTAMP '2023-01-01 01:01:01.123'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+
+        // Test gte and lt.
+        assertThat(
+                        sql(
+                                "SELECT ts FROM paimon.default.test_timestamp "
+                                        + "where ts >= TIMESTAMP '2023-01-01 01:01:01' "
+                                        + "and ts < TIMESTAMP '2023-01-01 01:01:02'"))
+                .isEqualTo("[[2023-01-01T01:01:01.123]]");
+    }
+
+    @Test
+    public void testDecimalPredicate() throws Exception {
+        // Test eq.
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 = 123.456"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c1 FROM paimon.default.test_decimal where c1 = 10000000000"))
+                .isEqualTo("[[10000000000]]");
+
+        // Test gt and gte.
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 > 123"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 > 123.455"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 >= 123"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 >= 123.456"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c1 FROM paimon.default.test_decimal where c1 >= 10000000000"))
+                .isEqualTo("[[10000000000]]");
+
+        // Test lt and lte.
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 < 124"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 < 123.457"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 <= 124"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 <= 123.457"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(sql("SELECT c1 FROM paimon.default.test_decimal where c1 <= 10000000000"))
+                .isEqualTo("[[10000000000]]");
+
+        // Test gt and lt.
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 > 123 and c2 < 666"))
+                .isEqualTo("[[123.456]]");
+
+        // Test gt and lte.
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 > 123 and c2 <= 666"))
+                .isEqualTo("[[123.456]]");
+
+        // Test gte and lte.
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 >= 123 and c2 <= 666"))
+                .isEqualTo("[[123.456]]");
+
+        // Test gte and lt.
+        assertThat(sql("SELECT c2 FROM paimon.default.test_decimal where c2 >= 123 and c2 < 666"))
+                .isEqualTo("[[123.456]]");
+
+        assertThat(
+                        sql(
+                                "SELECT c1 FROM paimon.default.test_decimal where c1 >= 10000000000 and c1 < 10000000001"))
+                .isEqualTo("[[10000000000]]");
     }
 
     private String sql(String sql) throws Exception {

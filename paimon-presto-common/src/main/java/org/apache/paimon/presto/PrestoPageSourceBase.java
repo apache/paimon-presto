@@ -54,6 +54,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -206,7 +207,13 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
                 prestoType.writeLong(
                         output, encodeShortScaledValue(decimal, decimalType.getScale()));
             } else if (prestoType.equals(TIMESTAMP)) {
-                prestoType.writeLong(output, ((Timestamp) value).toSQLTimestamp().getTime());
+                prestoType.writeLong(
+                        output,
+                        ((Timestamp) value)
+                                .toLocalDateTime()
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli());
             } else if (prestoType.equals(TIME)) {
                 prestoType.writeLong(output, (int) value * 1_000);
             } else {
