@@ -33,7 +33,7 @@ concurrency:
 
 jobs:
   publish-snapshot:
-    if: github.repository == 'apache/incubator-paimon-presto'
+    if: github.repository == 'apache/paimon-presto'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
