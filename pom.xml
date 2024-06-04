@@ -29,6 +29,7 @@ under the License.
         <module>paimon-presto-0.236</module>
         <module>paimon-prestosql-common</module>
         <module>paimon-prestosql-332</module>
+        <module>paimon-presto-0.287</module>
     </modules>
 
     <parent>
@@ -40,7 +41,7 @@ under the License.
     <groupId>org.apache.paimon</groupId>
     <artifactId>paimon-presto</artifactId>
     <name>Paimon : Presto</name>
-    <version>0.7-SNAPSHOT</version>
+    <version>0.8-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
