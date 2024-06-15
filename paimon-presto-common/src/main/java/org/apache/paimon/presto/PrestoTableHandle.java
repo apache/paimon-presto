@@ -45,8 +45,8 @@ import java.util.stream.Collectors;
 /** Presto {@link ConnectorTableHandle}. */
 public class PrestoTableHandle implements ConnectorTableHandle {
 
-    public static final String SCAN_TIMESTAMP = "scan_timestamp_millis";
-    public static final String SCAN_DATETIME = "scan_datetime";
+    public static final String SCAN_TIMESTAMP_MILLIS = "scan_timestamp_millis";
+    public static final String SCAN_TIMESTAMP = "scan_timestamp";
     public static final String SCAN_SNAPSHOT = "scan_snapshot_id";
 
     private final String schemaName;
@@ -113,15 +113,15 @@ public class PrestoTableHandle implements ConnectorTableHandle {
     public Table tableWithDynamicOptions(ConnectorSession session) {
         // see TrinoConnector.getSessionProperties
         Map<String, String> dynamicOptions = new HashMap<>();
-        Long scanTimestampMills = session.getProperty(SCAN_TIMESTAMP, Long.class);
+        Long scanTimestampMills = session.getProperty(SCAN_TIMESTAMP_MILLIS, Long.class);
         if (scanTimestampMills != null) {
             dynamicOptions.put(
                     CoreOptions.SCAN_TIMESTAMP_MILLIS.key(), scanTimestampMills.toString());
         }
-        String scanDatetime = session.getProperty(SCAN_DATETIME, String.class);
+        String scanTimestampStr = session.getProperty(SCAN_TIMESTAMP, String.class);
         //
-        if (scanDatetime != null) {
-            Long scanTimestamp = DateUtils.autoFormatToTimestamp(scanDatetime);
+        if (scanTimestampStr != null) {
+            Long scanTimestamp = DateUtils.autoFormatToTimestamp(scanTimestampStr);
             dynamicOptions.put(CoreOptions.SCAN_TIMESTAMP_MILLIS.key(), scanTimestamp.toString());
         }
 

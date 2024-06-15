@@ -38,7 +38,6 @@ import static com.facebook.presto.spi.transaction.IsolationLevel.checkConnectorS
 import static java.util.Objects.requireNonNull;
 import static org.apache.paimon.CoreOptions.SCAN_SNAPSHOT_ID;
 import static org.apache.paimon.CoreOptions.SCAN_TIMESTAMP_MILLIS;
-import static org.apache.paimon.presto.PrestoTableHandle.SCAN_DATETIME;
 import static org.apache.paimon.presto.PrestoTableHandle.SCAN_SNAPSHOT;
 import static org.apache.paimon.presto.PrestoTableHandle.SCAN_TIMESTAMP;
 
@@ -79,10 +78,10 @@ public abstract class PrestoConnectorBase implements Connector {
         String datetimeDescription =
                 "Will automatically convert to parameter： scan_timestamp_millis";
         List<PropertyMetadata<?>> props = new ArrayList<>();
-        props.add(PropertyMetadata.stringProperty(SCAN_DATETIME, datetimeDescription, null, true));
+        props.add(PropertyMetadata.stringProperty(SCAN_TIMESTAMP, datetimeDescription, null, true));
         props.add(
                 PropertyMetadata.longProperty(
-                        SCAN_TIMESTAMP,
+                        PrestoTableHandle.SCAN_TIMESTAMP_MILLIS,
                         SCAN_TIMESTAMP_MILLIS.description().toString(),
                         null,
                         true));
