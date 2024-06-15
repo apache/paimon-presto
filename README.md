@@ -1,4 +1,4 @@
-# Apache Paimon (incubating) Presto Connector
+# Apache Paimon Presto Connector
 
 This repository is Presto Connector for the [Apache Paimon](https://paimon.apache.org/) project.
 
