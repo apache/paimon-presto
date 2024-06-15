@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.CoreOptions;
 import org.apache.paimon.table.Table;
 import org.apache.paimon.utils.InstantiationUtil;
 
@@ -25,6 +26,7 @@ import com.facebook.presto.common.predicate.TupleDomain;
 import com.facebook.presto.common.type.TypeManager;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ColumnMetadata;
+import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorTableHandle;
 import com.facebook.presto.spi.ConnectorTableMetadata;
 import com.facebook.presto.spi.SchemaTableName;
@@ -33,13 +35,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** Presto {@link ConnectorTableHandle}. */
 public class PrestoTableHandle implements ConnectorTableHandle {
+
+    public static final String SCAN_TIMESTAMP_MILLIS = "scan_timestamp_millis";
+    public static final String SCAN_TIMESTAMP = "scan_timestamp";
+    public static final String SCAN_SNAPSHOT = "scan_snapshot_id";
 
     private final String schemaName;
     private final String tableName;
@@ -100,6 +108,29 @@ public class PrestoTableHandle implements ConnectorTableHandle {
     public PrestoTableHandle copy(Optional<List<ColumnHandle>> projectedColumns) {
         return new PrestoTableHandle(
                 schemaName, tableName, serializedTable, filter, projectedColumns);
+    }
+
+    public Table tableWithDynamicOptions(ConnectorSession session) {
+        // see TrinoConnector.getSessionProperties
+        Map<String, String> dynamicOptions = new HashMap<>();
+        Long scanTimestampMills = session.getProperty(SCAN_TIMESTAMP_MILLIS, Long.class);
+        if (scanTimestampMills != null) {
+            dynamicOptions.put(
+                    CoreOptions.SCAN_TIMESTAMP_MILLIS.key(), scanTimestampMills.toString());
+        }
+        String scanTimestampStr = session.getProperty(SCAN_TIMESTAMP, String.class);
+        //
+        if (scanTimestampStr != null) {
+            Long scanTimestamp = DateUtils.autoFormatToTimestamp(scanTimestampStr);
+            dynamicOptions.put(CoreOptions.SCAN_TIMESTAMP_MILLIS.key(), scanTimestamp.toString());
+        }
+
+        Long scanSnapshotId = session.getProperty(SCAN_SNAPSHOT, Long.class);
+        if (scanSnapshotId != null) {
+            dynamicOptions.put(CoreOptions.SCAN_SNAPSHOT_ID.key(), scanSnapshotId.toString());
+        }
+
+        return dynamicOptions.size() > 0 ? table().copy(dynamicOptions) : table();
     }
 
     public Table table() {
