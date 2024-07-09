@@ -43,7 +43,8 @@ After the packaging is complete, you can choose the corresponding connector base
 |-----------------|-------------------------------------------------------------------------------|
 | [0.236, 0.268)  | `./paimon-presto-0.236/target/paimon-presto-0.236-0.7-SNAPSHOT-plugin.tar.gz` |
 | [0.268, 0.273)  | `./paimon-presto-0.268/target/paimon-presto-0.268-0.7-SNAPSHOT-plugin.tar.gz` |
-| [0.273, latest] | `./paimon-presto-0.273/target/paimon-presto-0.273-0.7-SNAPSHOT-plugin.tar.gz` |
+| [0.273, 0.287] | `./paimon-presto-0.273/target/paimon-presto-0.273-0.7-SNAPSHOT-plugin.tar.gz` |
+| [0.287, latest] | `./paimon-presto-0.287/target/paimon-presto-0.287-0.8-SNAPSHOT-plugin.tar.gz` |
 
 Of course, we also support different versions of Hive and Hadoop. But note that we utilize 
 Presto-shaded versions of Hive and Hadoop packages to address dependency conflicts. 
