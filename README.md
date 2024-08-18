@@ -1,5 +1,30 @@
 # Apache Paimon Presto Connector
 
+## 说明
+我的环境
+```shell
+mvn clean install -DskipTests -am -pl paimon-presto-0.273 -Dpresto.version=0.278.1 -Dhadoop.apache2.version=3.3.4
+```
+
+单编辑一下个模块
+```shell
+mvn install -Dgpg.skip -Drat.skip -DskipTests -Papache-release -pl paimon-presto-common
+```
+> 如果要让hive catalog查询paimon表，则需要将出的`paimon-presto-common`包中的`META-INFO/services/com.facebook.presto.spi.Plugin`文件删除掉
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This repository is Presto Connector for the [Apache Paimon](https://paimon.apache.org/) project.
 
 ## About

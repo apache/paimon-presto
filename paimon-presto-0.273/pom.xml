@@ -25,7 +25,7 @@ under the License.
     <parent>
         <artifactId>paimon-presto</artifactId>
         <groupId>org.apache.paimon</groupId>
-        <version>0.7-SNAPSHOT</version>
+        <version>0.9-SNAPSHOT</version>
     </parent>
 
     <artifactId>paimon-presto-0.273</artifactId>

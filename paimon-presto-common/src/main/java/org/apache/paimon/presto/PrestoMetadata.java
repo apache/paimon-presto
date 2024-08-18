@@ -321,4 +321,8 @@ public class PrestoMetadata implements ConnectorMetadata {
                                         getTableHandle(session, table)
                                                 .columnMetadatas(typeManager)));
     }
+
+    public TypeManager getTypeManager() {
+        return typeManager;
+    }
 }
