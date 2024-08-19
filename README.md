@@ -3,7 +3,8 @@
 ## 说明
 我的环境
 ```shell
-mvn clean install -DskipTests -am -pl paimon-presto-0.273 -Dpresto.version=0.278.1 -Dhadoop.apache2.version=3.3.4
+mvn clean install -DskipTests -Dgpg.skip -Drat.skip -Papache-release -am -pl paimon-presto-0.273 -Dpresto.version=0.287
+# -Dhadoop.apache2.version=3.3.4
 ```
 
 单编辑一下个模块
