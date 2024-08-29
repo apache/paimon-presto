@@ -34,10 +34,10 @@ under the License.
     <name>Paimon : Presto : Common</name>
 
     <properties>
-        <presto.version>0.287</presto.version>
-        <hadoop.apache2.version>2.7.4-12</hadoop.apache2.version>
-        <hive.apache.version>3.0.0-10</hive.apache.version>
-        <airlift.version>0.209</airlift.version>
+        <presto.version>0.273</presto.version>
+        <hadoop.apache2.version>2.7.4-9</hadoop.apache2.version>
+        <hive.apache.version>1.2.2-2</hive.apache.version>
+        <airlift.version>0.205</airlift.version>
         <libthrift.version>0.9.3</libthrift.version>
     </properties>
 
@@ -152,12 +152,6 @@ under the License.
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.facebook.presto</groupId>
-            <artifactId>presto-main</artifactId>
-            <version>0.273</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
