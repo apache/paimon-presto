@@ -47,7 +47,7 @@ public class PrestoConnector extends PrestoConnectorBase {
                 prestoSplitManager,
                 prestoPageSourceProvider,
                 prestoMetadata,
-                Optional.empty());
+                prestoPlanOptimizerProvider);
         this.transactionManager = transactionManager;
     }
 

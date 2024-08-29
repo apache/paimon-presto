@@ -66,6 +66,8 @@ public class TestPrestoITCase {
     protected QueryRunner createQueryRunner() throws Exception {
         String warehouse =
                 Files.createTempDirectory(UUID.randomUUID().toString()).toUri().toString();
+        Map<String, String> options = new HashMap<>();
+        options.put("bucket", "2");
 
         Path tablePath1 = new Path(warehouse, DB + ".db/t1");
         SimpleTableTestHelper testHelper1 = createTestHelper(tablePath1);
@@ -101,7 +103,7 @@ public class TestPrestoITCase {
                                     rowType.getFields(),
                                     Collections.singletonList("pt"),
                                     Collections.emptyList(),
-                                    new HashMap<>(),
+                                    options,
                                     ""));
             FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath3);
             InnerTableWrite writer = table.newWrite("user");
@@ -130,7 +132,7 @@ public class TestPrestoITCase {
                                     rowType.getFields(),
                                     Collections.emptyList(),
                                     Collections.singletonList("i"),
-                                    new HashMap<>(),
+                                    options,
                                     ""));
             FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath4);
             InnerTableWrite writer = table.newWrite("user");
@@ -154,7 +156,6 @@ public class TestPrestoITCase {
                                     testSessionBuilder().setCatalog(CATALOG).setSchema(DB).build())
                             .build();
             queryRunner.installPlugin(new PrestoPlugin());
-            Map<String, String> options = new HashMap<>();
             options.put("warehouse", warehouse);
             queryRunner.createCatalog(CATALOG, CATALOG, options);
             return queryRunner;
