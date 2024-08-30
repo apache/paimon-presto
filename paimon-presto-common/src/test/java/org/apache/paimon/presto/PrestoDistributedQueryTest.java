@@ -436,11 +436,6 @@ public class PrestoDistributedQueryTest extends AbstractTestDistributedQueries {
     }
 
     @Override
-    public void testDistinctLimitWithHashBasedDistinctLimitEnabled() {
-        throw new SkipException("TODO: test not implemented yet");
-    }
-
-    @Override
     public void testDistinctLimitWithQuickDistinctLimitEnabled() {
         throw new SkipException("TODO: test not implemented yet");
     }
