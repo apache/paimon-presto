@@ -82,9 +82,12 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
     private final PageBuilder pageBuilder;
     private final List<Type> prestoColumnTypes;
     private final List<DataType> paimonColumnTypes;
+    private long completedBytes;
+    private long readTimeNanos;
+    private long memoryUsageBytes;
+    private long numReturn = 0;
 
     private boolean isFinished = false;
-    private long numReturn = 0;
 
     public PrestoPageSourceBase(
             RecordReader<InternalRow> reader, List<ColumnHandle> projectedColumns) {
@@ -102,17 +105,17 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
 
     @Override
     public long getCompletedBytes() {
-        return 0;
+        return completedBytes;
     }
 
     @Override
     public long getCompletedPositions() {
-        return 0;
+        return numReturn;
     }
 
     @Override
     public long getReadTimeNanos() {
-        return 0;
+        return readTimeNanos;
     }
 
     @Override
@@ -135,32 +138,37 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
 
     @Override
     public long getSystemMemoryUsage() {
-        return 0;
+        return memoryUsageBytes;
     }
 
     @Nullable
     private Page nextPage() throws IOException {
         int count = 0;
-        while (count < ROWS_PER_REQUEST && !pageBuilder.isFull()) {
-            if (!iterator.hasNext()) {
-                isFinished = true;
-                return returnPage(count);
+        long start = System.nanoTime();
+        try {
+            while (count < ROWS_PER_REQUEST && !pageBuilder.isFull()) {
+                if (!iterator.hasNext()) {
+                    isFinished = true;
+                    return returnPage(count);
+                }
+
+                InternalRow row = iterator.next();
+                pageBuilder.declarePosition();
+                count++;
+                for (int i = 0; i < prestoColumnTypes.size(); i++) {
+                    BlockBuilder output = pageBuilder.getBlockBuilder(i);
+                    appendTo(
+                            prestoColumnTypes.get(i),
+                            paimonColumnTypes.get(i),
+                            InternalRowUtils.get(row, i, paimonColumnTypes.get(i)),
+                            output);
+                }
             }
 
-            InternalRow row = iterator.next();
-            pageBuilder.declarePosition();
-            count++;
-            for (int i = 0; i < prestoColumnTypes.size(); i++) {
-                BlockBuilder output = pageBuilder.getBlockBuilder(i);
-                appendTo(
-                        prestoColumnTypes.get(i),
-                        paimonColumnTypes.get(i),
-                        InternalRowUtils.get(row, i, paimonColumnTypes.get(i)),
-                        output);
-            }
+            return returnPage(count);
+        } finally {
+            readTimeNanos += System.nanoTime() - start;
         }
-
-        return returnPage(count);
     }
 
     private Page returnPage(int count) {
@@ -169,6 +177,9 @@ public abstract class PrestoPageSourceBase implements ConnectorPageSource {
         }
         numReturn += count;
         Page page = pageBuilder.build();
+        long pageSizeInBytes = page.getSizeInBytes();
+        completedBytes += pageSizeInBytes;
+        memoryUsageBytes = Math.max(memoryUsageBytes, pageSizeInBytes);
         pageBuilder.reset();
         return page;
     }
