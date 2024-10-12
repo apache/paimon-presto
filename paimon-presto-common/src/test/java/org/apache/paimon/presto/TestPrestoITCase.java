@@ -26,6 +26,7 @@ import org.apache.paimon.fs.Path;
 import org.apache.paimon.fs.local.LocalFileIO;
 import org.apache.paimon.schema.Schema;
 import org.apache.paimon.schema.SchemaManager;
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableMap;
 import org.apache.paimon.table.FileStoreTable;
 import org.apache.paimon.table.FileStoreTableFactory;
 import org.apache.paimon.table.sink.InnerTableCommit;
@@ -143,7 +144,7 @@ public class TestPrestoITCase {
                                     rowType.getFields(),
                                     Collections.emptyList(),
                                     Collections.singletonList("i"),
-                                    new HashMap<>(),
+                                    ImmutableMap.of("bucket", "1"),
                                     ""));
             FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath4);
             InnerTableWrite writer = table.newWrite("user");
@@ -174,7 +175,7 @@ public class TestPrestoITCase {
                                     rowType.getFields(),
                                     Collections.emptyList(),
                                     Collections.singletonList("ts"),
-                                    new HashMap<>(),
+                                    ImmutableMap.of("bucket", "1"),
                                     ""));
             FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath5);
             InnerTableWrite writer = table.newWrite("user");
@@ -204,7 +205,7 @@ public class TestPrestoITCase {
                                     rowType.getFields(),
                                     Collections.emptyList(),
                                     Arrays.asList("c1", "c2"),
-                                    new HashMap<>(),
+                                    ImmutableMap.of("bucket", "1"),
                                     ""));
             FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath5);
             InnerTableWrite writer = table.newWrite("user");
