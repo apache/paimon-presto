@@ -41,7 +41,7 @@ public class SimpleTableTestHelper {
 
     public SimpleTableTestHelper(Path path, RowType rowType) throws Exception {
         Map<String, String> options = new HashMap<>();
-        options.put("bucket", "2");
+        options.put("bucket", "1");
         new SchemaManager(LocalFileIO.create(), path)
                 .createTable(
                         new Schema(
