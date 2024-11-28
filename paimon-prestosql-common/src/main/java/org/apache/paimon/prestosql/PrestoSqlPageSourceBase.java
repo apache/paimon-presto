@@ -49,6 +49,7 @@ import io.prestosql.spi.type.VarcharType;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -172,7 +173,13 @@ public abstract class PrestoSqlPageSourceBase implements ConnectorPageSource {
                 BigDecimal decimal = ((Decimal) value).toBigDecimal();
                 type.writeLong(output, encodeShortScaledValue(decimal, decimalType.getScale()));
             } else if (type.equals(TIMESTAMP)) {
-                type.writeLong(output, ((Timestamp) value).getMillisecond());
+                long localMillis =
+                        ((Timestamp) value)
+                                .toLocalDateTime()
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli();
+                type.writeLong(output, localMillis);
             } else if (type.equals(TIME)) {
                 type.writeLong(output, (int) value);
             } else if (type.equals(TIMESTAMP_WITH_TIME_ZONE)) {
