@@ -18,6 +18,7 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.data.BinaryString;
 import org.apache.paimon.data.Decimal;
 import org.apache.paimon.data.GenericMap;
 import org.apache.paimon.data.GenericRow;
@@ -26,6 +27,7 @@ import org.apache.paimon.fs.Path;
 import org.apache.paimon.fs.local.LocalFileIO;
 import org.apache.paimon.schema.Schema;
 import org.apache.paimon.schema.SchemaManager;
+import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableList;
 import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableMap;
 import org.apache.paimon.table.FileStoreTable;
 import org.apache.paimon.table.FileStoreTableFactory;
@@ -42,6 +44,7 @@ import org.apache.paimon.types.RowType;
 import org.apache.paimon.types.TimestampType;
 import org.apache.paimon.types.VarCharType;
 
+import com.facebook.presto.Session;
 import com.facebook.presto.common.type.TimeZoneKey;
 import com.facebook.presto.testing.MaterializedResult;
 import com.facebook.presto.testing.QueryRunner;
@@ -63,6 +66,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.facebook.airlift.testing.Closeables.closeAllSuppress;
 import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
@@ -214,6 +218,58 @@ public class TestPrestoITCase {
                     GenericRow.of(
                             Decimal.fromBigDecimal(new BigDecimal("10000000000"), 20, 0),
                             Decimal.fromBigDecimal(new BigDecimal("123.456"), 6, 3)));
+            commit.commit(0, writer.prepareCommit(true, 0));
+        }
+
+        // partitioned table
+        {
+            Path tablePath = new Path(warehouse, "default.db/t5");
+            RowType rowType =
+                    new RowType(
+                            Arrays.asList(
+                                    new DataField(0, "i1", VarCharType.STRING_TYPE),
+                                    new DataField(1, "i2", new IntType()),
+                                    new DataField(2, "i3", new IntType())));
+            new SchemaManager(LocalFileIO.create(), tablePath)
+                    .createTable(
+                            new Schema(
+                                    rowType.getFields(),
+                                    ImmutableList.of("i1", "i2"),
+                                    Collections.emptyList(),
+                                    ImmutableMap.of("bucket", "1"),
+                                    ""));
+            FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath);
+            InnerTableWrite writer = table.newWrite("user");
+            InnerTableCommit commit = table.newCommit("user");
+            writer.write(GenericRow.of(BinaryString.fromString("20241103"), 1, 1));
+            writer.write(GenericRow.of(BinaryString.fromString("20241103"), 2, 2));
+            writer.write(GenericRow.of(BinaryString.fromString("20241104"), 3, 2));
+            commit.commit(0, writer.prepareCommit(true, 0));
+        }
+
+        // partitioned table
+        {
+            Path tablePath = new Path(warehouse, "default.db/t6");
+            RowType rowType =
+                    new RowType(
+                            Arrays.asList(
+                                    new DataField(0, "i1", new IntType()),
+                                    new DataField(1, "i2", VarCharType.STRING_TYPE),
+                                    new DataField(2, "i3", new IntType())));
+            new SchemaManager(LocalFileIO.create(), tablePath)
+                    .createTable(
+                            new Schema(
+                                    rowType.getFields(),
+                                    ImmutableList.of("i2"),
+                                    ImmutableList.of("i2", "i1"),
+                                    ImmutableMap.of("bucket", "1"),
+                                    ""));
+            FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath);
+            InnerTableWrite writer = table.newWrite("user");
+            InnerTableCommit commit = table.newCommit("user");
+            writer.write(GenericRow.of(1, BinaryString.fromString("20241103"), 1));
+            writer.write(GenericRow.of(2, BinaryString.fromString("20241103"), 2));
+            writer.write(GenericRow.of(3, BinaryString.fromString("20241104"), 2));
             commit.commit(0, writer.prepareCommit(true, 0));
         }
 
@@ -503,8 +559,81 @@ public class TestPrestoITCase {
                 .isEqualTo("[[10000000000]]");
     }
 
+    @Test
+    public void testPartitionPushDown1() throws Exception {
+        assertThat(sql("EXPLAIN SELECT * FROM paimon.default.t5 where upper(i1) = '20241103'"))
+                .contains(
+                        "LAYOUT: PrestoTableLayoutHandle{tableHandle=PrestoTableHandle{schemaName='default', tableName='t5', filter=TupleDomain{ALL}, partitions=Optional[[{i1=20241103, i2=2}, {i1=20241103, i2=1}]]}, constraintSummary=TupleDomain{ALL}");
+        assertThat(sql("SELECT * FROM paimon.default.t5 where upper(i1) = '20241103'"))
+                .isEqualTo("[[20241103, 1, 1], [20241103, 2, 2]]");
+    }
+
+    @Test
+    public void testPartitionPushDown2() throws Exception {
+        assertThat(
+                        sql(
+                                ("EXPLAIN SELECT * FROM paimon.default.t5 where upper(i1) = '20241103' and i2 =1")))
+                .contains(
+                        "LAYOUT: PrestoTableLayoutHandle{tableHandle=PrestoTableHandle{schemaName='default', tableName='t5', filter=TupleDomain{...}, partitions=Optional[[{i1=20241103, i2=1}]]}, constraintSummary=TupleDomain{...}");
+        assertThat(sql("SELECT * FROM paimon.default.t5 where upper(i1) = '20241103' and i2 =1"))
+                .isEqualTo("[[20241103, 1, 1]]");
+    }
+
+    @Test
+    public void testPartitionPushDown3() throws Exception {
+        assertThat(
+                        sql(
+                                ("EXPLAIN SELECT * FROM paimon.default.t5 where upper(i1) = '20241105' and i2 =1")))
+                .contains(
+                        "LAYOUT: PrestoTableLayoutHandle{tableHandle=PrestoTableHandle{schemaName='default', "
+                                + "tableName='t5', filter=TupleDomain{...}, partitions=Optional[[]]}, constraintSummary=TupleDomain{...}}");
+        assertThat(sql("SELECT * FROM paimon.default.t5 where upper(i1) = '20241105' and i2 =1"))
+                .isEqualTo("[]");
+    }
+
+    @Test
+    public void testPartitionPushDown4() throws Exception {
+        assertThat(
+                        sql(
+                                "EXPLAIN SELECT * FROM paimon.default.t5 where upper(i1) = "
+                                        + "'20241103'and i2 =1",
+                                "partition_prune_enabled",
+                                "false"))
+                .contains(
+                        "LAYOUT: PrestoTableLayoutHandle{tableHandle=PrestoTableHandle{schemaName='default', "
+                                + "tableName='t5', filter=TupleDomain{...}, partitions=Optional.empty}, constraintSummary=TupleDomain{...}");
+        assertThat(
+                        sql(
+                                "SELECT * FROM paimon.default.t5 where upper(i1) = "
+                                        + "'20241103'and i2 =1",
+                                "partition_prune_enabled",
+                                "false"))
+                .isEqualTo("[[20241103, 1, 1]]");
+    }
+
+    @Test
+    public void testPartitionPushDown5() throws Exception {
+        assertThat(sql("SELECT * FROM paimon.default.t6 where upper(i2) = '20241103'"))
+                .isEqualTo("[[1, 20241103, 1], [2, 20241103, 2]]");
+    }
+
+    private String sql(String sql, String key, String value) throws Exception {
+        Session session =
+                testSessionBuilder().setCatalogSessionProperty("paimon", key, value).build();
+        MaterializedResult result = queryRunner.execute(session, sql);
+        return result.getMaterializedRows().stream()
+                .map(Object::toString)
+                .sorted()
+                .collect(Collectors.toList())
+                .toString();
+    }
+
     private String sql(String sql) throws Exception {
         MaterializedResult result = queryRunner.execute(sql);
-        return result.getMaterializedRows().toString();
+        return result.getMaterializedRows().stream()
+                .map(Object::toString)
+                .sorted()
+                .collect(Collectors.toList())
+                .toString();
     }
 }

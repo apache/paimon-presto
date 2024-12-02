@@ -18,9 +18,22 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.fs.Path;
+import org.apache.paimon.fs.local.LocalFileIO;
+import org.apache.paimon.schema.Schema;
+import org.apache.paimon.schema.SchemaManager;
+import org.apache.paimon.table.FileStoreTable;
+import org.apache.paimon.table.FileStoreTableFactory;
 import org.apache.paimon.types.BigIntType;
+import org.apache.paimon.types.DataField;
+import org.apache.paimon.types.IntType;
+import org.apache.paimon.types.RowType;
+import org.apache.paimon.types.VarCharType;
+import org.apache.paimon.utils.InstantiationUtil;
 
+import com.facebook.presto.block.BlockEncodingManager;
 import com.facebook.presto.common.predicate.TupleDomain;
+import com.facebook.presto.metadata.FunctionManager;
 import com.facebook.presto.metadata.MetadataManager;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorId;
@@ -40,6 +53,7 @@ import com.facebook.presto.spi.relation.RowExpression;
 import com.facebook.presto.spi.relation.RowExpressionService;
 import com.facebook.presto.spi.relation.VariableReferenceExpression;
 import com.facebook.presto.sql.TestingRowExpressionTranslator;
+import com.facebook.presto.sql.analyzer.FeaturesConfig;
 import com.facebook.presto.sql.gen.RowExpressionPredicateCompiler;
 import com.facebook.presto.sql.planner.PlanVariableAllocator;
 import com.facebook.presto.sql.planner.TypeProvider;
@@ -52,8 +66,12 @@ import com.facebook.presto.testing.TestingConnectorSession;
 import com.facebook.presto.type.TypeRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +120,33 @@ public class TestPrestoComputePushdown {
                 }
             };
 
+    public byte[] table;
+
+    @BeforeTest
+    public void setUp() throws Exception {
+        String warehouse =
+                Files.createTempDirectory(UUID.randomUUID().toString()).toUri().toString();
+        Path tablePath3 = new Path(warehouse, "default.db/t3");
+        RowType rowType =
+                new RowType(
+                        Arrays.asList(
+                                new DataField(0, "pt", new VarCharType()),
+                                new DataField(1, "a", new IntType()),
+                                new DataField(2, "b", new BigIntType()),
+                                new DataField(3, "c", new BigIntType()),
+                                new DataField(4, "d", new IntType())));
+        new SchemaManager(LocalFileIO.create(), tablePath3)
+                .createTable(
+                        new Schema(
+                                rowType.getFields(),
+                                Collections.singletonList("pt"),
+                                Collections.emptyList(),
+                                new HashMap<>(),
+                                ""));
+        FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath3);
+        this.table = InstantiationUtil.serializeObject(table);
+    }
+
     private TableScanNode createTableScan() {
         PlanVariableAllocator variableAllocator = new PlanVariableAllocator();
         VariableReferenceExpression variableA = variableAllocator.newVariable("a", BIGINT);
@@ -114,7 +159,7 @@ public class TestPrestoComputePushdown {
                                         "id", new BigIntType(), new TypeRegistry()))
                         .build();
 
-        PrestoTableHandle tableHandle = new PrestoTableHandle("test", "test", "table".getBytes());
+        PrestoTableHandle tableHandle = new PrestoTableHandle("test", "test", this.table);
 
         return new TableScanNode(
                 new PlanNodeId(UUID.randomUUID().toString()),
@@ -127,8 +172,9 @@ public class TestPrestoComputePushdown {
                                         new PrestoTableHandle(
                                                 "test",
                                                 "test",
-                                                "table".getBytes(),
+                                                this.table,
                                                 TupleDomain.all(),
+                                                Optional.empty(),
                                                 Optional.empty()),
                                         TupleDomain.all()))),
                 ImmutableList.copyOf(assignments.keySet()),
@@ -171,7 +217,14 @@ public class TestPrestoComputePushdown {
         PrestoSessionProperties prestoSessionProperties = new PrestoSessionProperties(config);
 
         PrestoComputePushdown prestoComputePushdown =
-                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE);
+                new PrestoComputePushdown(
+                        FUNCTION_RESOLUTION,
+                        ROW_EXPRESSION_SERVICE,
+                        new FunctionManager(
+                                new TypeRegistry(),
+                                new BlockEncodingManager(new TypeRegistry()),
+                                new FeaturesConfig()),
+                        new PrestoTransactionManager());
 
         PlanNode mockInputPlan = createFilterNode();
         ConnectorSession session =
@@ -219,7 +272,14 @@ public class TestPrestoComputePushdown {
         PrestoSessionProperties prestoSessionProperties = new PrestoSessionProperties(config);
 
         PrestoComputePushdown prestoComputePushdown =
-                new PrestoComputePushdown(FUNCTION_RESOLUTION, ROW_EXPRESSION_SERVICE);
+                new PrestoComputePushdown(
+                        FUNCTION_RESOLUTION,
+                        ROW_EXPRESSION_SERVICE,
+                        new FunctionManager(
+                                new TypeRegistry(),
+                                new BlockEncodingManager(new TypeRegistry()),
+                                new FeaturesConfig()),
+                        new PrestoTransactionManager());
 
         PlanNode mockInputPlan = createFilterNode();
         ConnectorSession session =

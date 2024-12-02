@@ -18,9 +18,14 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.CoreOptions;
+import org.apache.paimon.partition.PartitionPredicate;
+import org.apache.paimon.predicate.Predicate;
+import org.apache.paimon.predicate.PredicateBuilder;
 import org.apache.paimon.table.Table;
 import org.apache.paimon.table.source.ReadBuilder;
 import org.apache.paimon.table.source.Split;
+import org.apache.paimon.utils.InternalRowPartitionComputer;
 
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorSplitSource;
@@ -28,7 +33,10 @@ import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** Presto {@link ConnectorSplitManager}. */
@@ -47,6 +55,27 @@ public class PrestoSplitManager implements ConnectorSplitManager {
         new PrestoFilterConverter(table.rowType())
                 .convert(tableHandle.getFilter())
                 .ifPresent(readBuilder::withFilter);
+        Optional<List<Map<String, String>>> partitions = tableHandle.getPartitions();
+        org.apache.paimon.types.RowType partitionType =
+                table.rowType().project(table.partitionKeys());
+        List<Predicate> predicates = new ArrayList<>();
+
+        String partitionDefaultName = new CoreOptions(table.options()).partitionDefaultName();
+        if (partitions.isPresent()) {
+            for (Map<String, String> row : partitions.get()) {
+                Map<String, Object> partition =
+                        InternalRowPartitionComputer.convertSpecToInternal(
+                                row, partitionType, partitionDefaultName);
+                predicates.add(
+                        PartitionPredicate.createPartitionPredicate(table.rowType(), partition));
+            }
+            if (!predicates.isEmpty()) {
+                readBuilder.withFilter(PredicateBuilder.or(predicates));
+            } else {
+                // empty partition
+                return new PrestoSplitSource(new ArrayList<>());
+            }
+        }
         List<Split> splits = readBuilder.newScan().plan().splits();
         return new PrestoSplitSource(
                 splits.stream().map(PrestoSplit::fromSplit).collect(Collectors.toList()));
