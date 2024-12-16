@@ -25,7 +25,7 @@ under the License.
     <parent>
         <artifactId>paimon-presto</artifactId>
         <groupId>org.apache.paimon</groupId>
-        <version>0.8-SNAPSHOT</version>
+        <version>0.8.2</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -61,6 +61,12 @@ under the License.
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-hive</artifactId>
             <version>${presto.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hudi</groupId>
+                    <artifactId>hudi-presto-bundle</artifactId>
+                </exclusion>
+           </exclusions>
         </dependency>
 
         <dependency>

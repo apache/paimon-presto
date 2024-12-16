@@ -40,6 +40,7 @@ import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorId;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.TableHandle;
+import com.facebook.presto.spi.VariableAllocator;
 import com.facebook.presto.spi.function.StandardFunctionResolution;
 import com.facebook.presto.spi.plan.FilterNode;
 import com.facebook.presto.spi.plan.PlanNode;
@@ -56,7 +57,6 @@ import com.facebook.presto.spi.relation.VariableReferenceExpression;
 import com.facebook.presto.sql.TestingRowExpressionTranslator;
 import com.facebook.presto.sql.analyzer.FeaturesConfig;
 import com.facebook.presto.sql.gen.RowExpressionPredicateCompiler;
-import com.facebook.presto.sql.planner.PlanVariableAllocator;
 import com.facebook.presto.sql.planner.TypeProvider;
 import com.facebook.presto.sql.planner.planPrinter.RowExpressionFormatter;
 import com.facebook.presto.sql.relational.FunctionResolution;
@@ -91,7 +91,9 @@ public class TestPrestoComputePushdown {
     public static final MetadataManager METADATA = MetadataManager.createTestMetadataManager();
 
     public static final StandardFunctionResolution FUNCTION_RESOLUTION =
-            new FunctionResolution(FunctionAndTypeManager.createTestFunctionAndTypeManager());
+            new FunctionResolution(
+                    FunctionAndTypeManager.createTestFunctionAndTypeManager()
+                            .getFunctionAndTypeResolver());
 
     public static final RowExpressionService ROW_EXPRESSION_SERVICE =
             new RowExpressionService() {
@@ -126,7 +128,7 @@ public class TestPrestoComputePushdown {
     public byte[] table;
 
     private TableScanNode createTableScan() {
-        PlanVariableAllocator variableAllocator = new PlanVariableAllocator();
+        VariableAllocator variableAllocator = new VariableAllocator();
         VariableReferenceExpression variableA = variableAllocator.newVariable("a", BIGINT);
 
         Map<VariableReferenceExpression, ColumnHandle> assignments =
@@ -240,7 +242,7 @@ public class TestPrestoComputePushdown {
         ConnectorSession session =
                 new TestingConnectorSession(
                         prestoSessionProperties.getSessionProperties(), prestoSessionConfig);
-        PlanVariableAllocator variableAllocator = new PlanVariableAllocator();
+        VariableAllocator variableAllocator = new VariableAllocator();
         PlanNodeIdAllocator idAllocator = new PlanNodeIdAllocator();
 
         // Call optimize
@@ -299,7 +301,7 @@ public class TestPrestoComputePushdown {
         ConnectorSession session =
                 new TestingConnectorSession(
                         prestoSessionProperties.getSessionProperties(), prestoSessionConfig);
-        PlanVariableAllocator variableAllocator = new PlanVariableAllocator();
+        VariableAllocator variableAllocator = new VariableAllocator();
         PlanNodeIdAllocator idAllocator = new PlanNodeIdAllocator();
 
         // Call optimize
