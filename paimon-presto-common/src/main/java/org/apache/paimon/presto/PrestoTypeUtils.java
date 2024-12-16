@@ -18,6 +18,10 @@
 
 package org.apache.paimon.presto;
 
+import org.apache.paimon.data.BinaryString;
+import org.apache.paimon.data.Decimal;
+import org.apache.paimon.data.Timestamp;
+import org.apache.paimon.shade.guava30.com.google.common.base.Verify;
 import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableList;
 import org.apache.paimon.types.ArrayType;
 import org.apache.paimon.types.BigIntType;
@@ -42,7 +46,10 @@ import org.apache.paimon.types.TinyIntType;
 import org.apache.paimon.types.VarBinaryType;
 import org.apache.paimon.types.VarCharType;
 
+import com.facebook.presto.common.block.Block;
+import com.facebook.presto.common.block.BlockBuilder;
 import com.facebook.presto.common.type.BigintType;
+import com.facebook.presto.common.type.Decimals;
 import com.facebook.presto.common.type.IntegerType;
 import com.facebook.presto.common.type.RealType;
 import com.facebook.presto.common.type.SmallintType;
@@ -55,12 +62,29 @@ import com.facebook.presto.common.type.TypeSignature;
 import com.facebook.presto.common.type.TypeSignatureParameter;
 import com.facebook.presto.common.type.VarbinaryType;
 import com.facebook.presto.common.type.VarcharType;
+import com.facebook.presto.spi.PrestoException;
+import io.airlift.slice.Slice;
 
+import java.math.BigDecimal;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.facebook.presto.common.type.BigintType.BIGINT;
+import static com.facebook.presto.common.type.DateType.DATE;
+import static com.facebook.presto.common.type.Decimals.encodeShortScaledValue;
+import static com.facebook.presto.common.type.Decimals.isLongDecimal;
+import static com.facebook.presto.common.type.Decimals.isShortDecimal;
+import static com.facebook.presto.common.type.IntegerType.INTEGER;
+import static com.facebook.presto.common.type.RealType.REAL;
+import static com.facebook.presto.common.type.SmallintType.SMALLINT;
+import static com.facebook.presto.common.type.TimeType.TIME;
+import static com.facebook.presto.common.type.TimestampType.TIMESTAMP;
+import static com.facebook.presto.common.type.TinyintType.TINYINT;
+import static com.facebook.presto.spi.StandardErrorCode.GENERIC_INTERNAL_ERROR;
+import static io.airlift.slice.Slices.wrappedBuffer;
 import static java.lang.String.format;
 
 /** Presto type from Paimon Type. */
@@ -205,6 +229,86 @@ public class PrestoTypeUtils {
         } else {
             throw new UnsupportedOperationException(
                     format("Cannot convert from Presto type '%s' to Paimon type", prestoType));
+        }
+    }
+
+    /** Covert a presto block from a value. */
+    public static Block singleValueToBlock(Type prestoType, Object value) {
+        if (value == null) {
+            return null;
+        }
+        BlockBuilder output = prestoType.createBlockBuilder(null, 1);
+        Class<?> javaType = prestoType.getJavaType();
+        if (javaType == boolean.class) {
+            prestoType.writeBoolean(output, (Boolean) value);
+        } else if (javaType == long.class) {
+            if (prestoType.equals(BIGINT)
+                    || prestoType.equals(INTEGER)
+                    || prestoType.equals(TINYINT)
+                    || prestoType.equals(SMALLINT)
+                    || prestoType.equals(DATE)) {
+                prestoType.writeLong(output, ((Number) value).longValue());
+            } else if (prestoType.equals(REAL)) {
+                prestoType.writeLong(output, Float.floatToIntBits((Float) value));
+            } else if (prestoType instanceof com.facebook.presto.common.type.DecimalType) {
+                Verify.verify(isShortDecimal(prestoType), "The type should be short decimal");
+                com.facebook.presto.common.type.DecimalType decimalType =
+                        (com.facebook.presto.common.type.DecimalType) prestoType;
+                BigDecimal decimal = ((Decimal) value).toBigDecimal();
+                prestoType.writeLong(
+                        output, encodeShortScaledValue(decimal, decimalType.getScale()));
+            } else if (prestoType.equals(TIMESTAMP)) {
+                prestoType.writeLong(
+                        output,
+                        ((Timestamp) value)
+                                .toLocalDateTime()
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli());
+            } else if (prestoType.equals(TIME)) {
+                prestoType.writeLong(output, (int) value * 1_000);
+            } else {
+                throw new PrestoException(
+                        GENERIC_INTERNAL_ERROR,
+                        format("Unhandled type for %s: %s", javaType.getSimpleName(), prestoType));
+            }
+        } else if (javaType == double.class) {
+            prestoType.writeDouble(output, ((Number) value).doubleValue());
+        } else if (prestoType instanceof com.facebook.presto.common.type.DecimalType) {
+            writeObject(output, prestoType, value);
+        } else if (javaType == Slice.class) {
+            writeSlice(output, prestoType, value);
+        } else {
+            throw new PrestoException(
+                    GENERIC_INTERNAL_ERROR,
+                    format("Unhandled type for %s: %s", javaType.getSimpleName(), prestoType));
+        }
+        return output.build();
+    }
+
+    private static void writeSlice(BlockBuilder output, Type type, Object value) {
+        if (type instanceof VarcharType
+                || type instanceof com.facebook.presto.common.type.CharType) {
+            type.writeSlice(output, wrappedBuffer(((BinaryString) value).toBytes()));
+        } else if (type instanceof VarbinaryType) {
+            type.writeSlice(output, wrappedBuffer((byte[]) value));
+        } else {
+            throw new PrestoException(
+                    GENERIC_INTERNAL_ERROR, "Unhandled type for Slice: " + type.getTypeSignature());
+        }
+    }
+
+    private static void writeObject(BlockBuilder output, Type type, Object value) {
+        if (type instanceof com.facebook.presto.common.type.DecimalType) {
+            Verify.verify(isLongDecimal(type), "The type should be long decimal");
+            com.facebook.presto.common.type.DecimalType decimalType =
+                    (com.facebook.presto.common.type.DecimalType) type;
+            BigDecimal decimal = ((Decimal) value).toBigDecimal();
+            type.writeSlice(output, Decimals.encodeScaledValue(decimal, decimalType.getScale()));
+        } else {
+            throw new PrestoException(
+                    GENERIC_INTERNAL_ERROR,
+                    "Unhandled type for Object: " + type.getTypeSignature());
         }
     }
 }

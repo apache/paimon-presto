@@ -36,7 +36,12 @@ public class PrestoTableHandleTest {
         byte[] serializedTable = TestPrestoUtils.getSerializedTable();
         PrestoTableHandle expected =
                 new PrestoTableHandle(
-                        "test", "user", serializedTable, TupleDomain.all(), Optional.empty());
+                        "test",
+                        "user",
+                        serializedTable,
+                        TupleDomain.all(),
+                        Optional.empty(),
+                        Optional.empty());
         testRoundTrip(expected);
     }
 

@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,12 +46,20 @@ public class PrestoTableHandle implements ConnectorTableHandle {
     private final String tableName;
     private final byte[] serializedTable;
     private final TupleDomain<PrestoColumnHandle> filter;
+
     private final Optional<List<ColumnHandle>> projectedColumns;
+    private final Optional<List<Map<String, String>>> partitions;
 
     private Table lazyTable;
 
     public PrestoTableHandle(String schemaName, String tableName, byte[] serializedTable) {
-        this(schemaName, tableName, serializedTable, TupleDomain.all(), Optional.empty());
+        this(
+                schemaName,
+                tableName,
+                serializedTable,
+                TupleDomain.all(),
+                Optional.empty(),
+                Optional.empty());
     }
 
     @JsonCreator
@@ -59,12 +68,14 @@ public class PrestoTableHandle implements ConnectorTableHandle {
             @JsonProperty("tableName") String tableName,
             @JsonProperty("serializedTable") byte[] serializedTable,
             @JsonProperty("filter") TupleDomain<PrestoColumnHandle> filter,
-            @JsonProperty("projection") Optional<List<ColumnHandle>> projectedColumns) {
+            @JsonProperty("projection") Optional<List<ColumnHandle>> projectedColumns,
+            @JsonProperty("partitions") Optional<List<Map<String, String>>> partitions) {
         this.schemaName = schemaName;
         this.tableName = tableName;
         this.serializedTable = serializedTable;
         this.filter = filter;
         this.projectedColumns = projectedColumns;
+        this.partitions = partitions;
     }
 
     @JsonProperty
@@ -88,18 +99,23 @@ public class PrestoTableHandle implements ConnectorTableHandle {
     }
 
     @JsonProperty
+    public Optional<List<Map<String, String>>> getPartitions() {
+        return partitions;
+    }
+
+    @JsonProperty
     public Optional<List<ColumnHandle>> getProjectedColumns() {
         return projectedColumns;
     }
 
     public PrestoTableHandle copy(TupleDomain<PrestoColumnHandle> filter) {
         return new PrestoTableHandle(
-                schemaName, tableName, serializedTable, filter, projectedColumns);
+                schemaName, tableName, serializedTable, filter, projectedColumns, partitions);
     }
 
     public PrestoTableHandle copy(Optional<List<ColumnHandle>> projectedColumns) {
         return new PrestoTableHandle(
-                schemaName, tableName, serializedTable, filter, projectedColumns);
+                schemaName, tableName, serializedTable, filter, projectedColumns, partitions);
     }
 
     public Table table() {
@@ -155,12 +171,34 @@ public class PrestoTableHandle implements ConnectorTableHandle {
                 && Objects.equals(schemaName, that.schemaName)
                 && Objects.equals(tableName, that.tableName)
                 && Objects.equals(filter, that.filter)
-                && Objects.equals(projectedColumns, that.projectedColumns);
+                && Objects.equals(projectedColumns, that.projectedColumns)
+                && Objects.equals(partitions, that.partitions);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                schemaName, tableName, filter, projectedColumns, Arrays.hashCode(serializedTable));
+                schemaName,
+                tableName,
+                filter,
+                projectedColumns,
+                Arrays.hashCode(serializedTable),
+                partitions);
+    }
+
+    @Override
+    public String toString() {
+        return "PrestoTableHandle{"
+                + "schemaName='"
+                + schemaName
+                + '\''
+                + ", tableName='"
+                + tableName
+                + '\''
+                + ", filter="
+                + filter
+                + ", partitions="
+                + partitions
+                + '}';
     }
 }

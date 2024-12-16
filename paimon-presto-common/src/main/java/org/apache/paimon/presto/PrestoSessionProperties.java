@@ -32,6 +32,7 @@ import static com.facebook.presto.spi.session.PropertyMetadata.booleanProperty;
 public class PrestoSessionProperties {
 
     public static final String QUERY_PUSHDOWN_ENABLED = "query_pushdown_enabled";
+    public static final String PARTITION_PRUNE_ENABLED = "partition_prune_enabled";
 
     private final List<PropertyMetadata<?>> sessionProperties;
 
@@ -43,6 +44,11 @@ public class PrestoSessionProperties {
                                 QUERY_PUSHDOWN_ENABLED,
                                 "Enable paimon query pushdown",
                                 config.isPaimonPushdownEnabled(),
+                                false),
+                        booleanProperty(
+                                PARTITION_PRUNE_ENABLED,
+                                "Enable paimon query partition prune",
+                                config.isPaimonPartitionPruningEnabled(),
                                 false));
     }
 
@@ -52,5 +58,9 @@ public class PrestoSessionProperties {
 
     public static boolean isPaimonPushdownEnabled(ConnectorSession session) {
         return session.getProperty(QUERY_PUSHDOWN_ENABLED, Boolean.class);
+    }
+
+    public static boolean isPartitionPruneEnabled(ConnectorSession session) {
+        return session.getProperty(PARTITION_PRUNE_ENABLED, Boolean.class);
     }
 }

@@ -28,6 +28,7 @@ public class PaimonConfig {
     private String metastore;
     private String uri;
     private boolean paimonPushdownEnabled = true;
+    private boolean paimonPartitionPruningEnabled = true;
 
     public String getWarehouse() {
         return warehouse;
@@ -67,6 +68,17 @@ public class PaimonConfig {
     @ConfigDescription("Enable paimon query pushdown")
     public PaimonConfig setPaimonPushdownEnabled(boolean paimonPushdownEnabled) {
         this.paimonPushdownEnabled = paimonPushdownEnabled;
+        return this;
+    }
+
+    public boolean isPaimonPartitionPruningEnabled() {
+        return paimonPartitionPruningEnabled;
+    }
+
+    @Config("paimon.partition-prune-enabled")
+    @ConfigDescription("Enable paimon query partition prune")
+    public PaimonConfig setPaimonPartitionPruningEnabled(boolean paimonPartitionPruningEnabled) {
+        this.paimonPartitionPruningEnabled = paimonPartitionPruningEnabled;
         return this;
     }
 }

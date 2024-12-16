@@ -26,6 +26,7 @@ import com.facebook.presto.spi.ConnectorPlanOptimizer;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.TableHandle;
 import com.facebook.presto.spi.VariableAllocator;
+import com.facebook.presto.spi.function.FunctionMetadataManager;
 import com.facebook.presto.spi.function.StandardFunctionResolution;
 import com.facebook.presto.spi.plan.FilterNode;
 import com.facebook.presto.spi.plan.PlanNode;
@@ -54,14 +55,21 @@ public class PrestoComputePushdown implements ConnectorPlanOptimizer {
 
     private final StandardFunctionResolution functionResolution;
     private final RowExpressionService rowExpressionService;
+    private final FunctionMetadataManager functionMetadataManager;
+    private final PrestoTransactionManager transactionManager;
 
     public PrestoComputePushdown(
             StandardFunctionResolution functionResolution,
-            RowExpressionService rowExpressionService) {
+            RowExpressionService rowExpressionService,
+            FunctionMetadataManager functionMetadataManager,
+            PrestoTransactionManager transactionManager) {
 
         this.functionResolution = requireNonNull(functionResolution, "functionResolution is null");
         this.rowExpressionService =
                 requireNonNull(rowExpressionService, "rowExpressionService is null");
+        this.functionMetadataManager =
+                requireNonNull(functionMetadataManager, "functionMetadataManager is null");
+        this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
     }
 
     @Override
@@ -180,7 +188,8 @@ public class PrestoComputePushdown implements ConnectorPlanOptimizer {
                             oldPrestoTableHandle.getTableName(),
                             oldPrestoTableHandle.getSerializedTable(),
                             entireColumnDomain,
-                            projectedColumns);
+                            projectedColumns,
+                            Optional.empty());
 
             PrestoTableLayoutHandle newLayoutHandle =
                     new PrestoTableLayoutHandle(

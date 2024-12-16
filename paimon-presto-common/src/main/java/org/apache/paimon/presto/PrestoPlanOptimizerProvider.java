@@ -20,6 +20,7 @@ package org.apache.paimon.presto;
 
 import com.facebook.presto.spi.ConnectorPlanOptimizer;
 import com.facebook.presto.spi.connector.ConnectorPlanOptimizerProvider;
+import com.facebook.presto.spi.function.FunctionMetadataManager;
 import com.facebook.presto.spi.function.StandardFunctionResolution;
 import com.facebook.presto.spi.relation.RowExpressionService;
 import com.google.common.collect.ImmutableSet;
@@ -35,19 +36,31 @@ public class PrestoPlanOptimizerProvider implements ConnectorPlanOptimizerProvid
 
     private final StandardFunctionResolution functionResolution;
     private final RowExpressionService rowExpressionService;
+    private final FunctionMetadataManager functionMetadataManager;
+    private final PrestoTransactionManager transactionManager;
 
     @Inject
     public PrestoPlanOptimizerProvider(
             StandardFunctionResolution functionResolution,
-            RowExpressionService rowExpressionService) {
+            RowExpressionService rowExpressionService,
+            FunctionMetadataManager functionMetadataManager,
+            PrestoTransactionManager transactionManager) {
         this.functionResolution = requireNonNull(functionResolution, "functionResolution is null");
         this.rowExpressionService =
                 requireNonNull(rowExpressionService, "rowExpressionService is null");
+        this.functionMetadataManager =
+                requireNonNull(functionMetadataManager, "functionMetadataManager is null");
+        this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
     }
 
     @Override
     public Set<ConnectorPlanOptimizer> getLogicalPlanOptimizers() {
-        return ImmutableSet.of(new PrestoComputePushdown(functionResolution, rowExpressionService));
+        return ImmutableSet.of(
+                new PrestoComputePushdown(
+                        functionResolution,
+                        rowExpressionService,
+                        functionMetadataManager,
+                        transactionManager));
     }
 
     @Override
