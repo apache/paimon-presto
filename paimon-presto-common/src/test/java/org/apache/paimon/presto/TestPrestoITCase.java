@@ -355,7 +355,18 @@ public class TestPrestoITCase {
 
     @Test
     public void testFilter() throws Exception {
-        assertThat(sql("SELECT a, aCa FROM paimon.default.t2 WHERE a < 4"))
+        assertThat(sql("SELECT a, aCa FROM paimon.default.t2 WHERE a < 7"))
+                .isEqualTo("[[1, 1], [3, 2], [5, 3]]");
+    }
+
+    @Test
+    public void testFilterWithTimeTravel() throws Exception {
+        // Time travel table t2 to first commit.
+        assertThat(
+                        sql(
+                                "SELECT a, aCa FROM paimon.default.t2 WHERE a < 7",
+                                PrestoSessionProperties.SCAN_VERSION,
+                                "1"))
                 .isEqualTo("[[1, 1], [3, 2]]");
     }
 

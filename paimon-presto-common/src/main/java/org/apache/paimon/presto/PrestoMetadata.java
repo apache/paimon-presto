@@ -27,6 +27,7 @@ import org.apache.paimon.options.Options;
 import org.apache.paimon.schema.Schema;
 import org.apache.paimon.security.SecurityContext;
 import org.apache.paimon.shade.guava30.com.google.common.collect.ImmutableList;
+import org.apache.paimon.table.Table;
 import org.apache.paimon.utils.InstantiationUtil;
 import org.apache.paimon.utils.StringUtils;
 
@@ -130,14 +131,24 @@ public class PrestoMetadata implements ConnectorMetadata {
 
     @Override
     public PrestoTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName) {
-        return getTableHandle(tableName);
+        return getTableHandle(tableName, PrestoSessionProperties.getScanVersion(session));
     }
 
-    public PrestoTableHandle getTableHandle(SchemaTableName tableName) {
+    public PrestoTableHandle getTableHandle(SchemaTableName tableName, String scanVersion) {
         Identifier tablePath = new Identifier(tableName.getSchemaName(), tableName.getTableName());
         byte[] serializedTable;
         try {
-            serializedTable = InstantiationUtil.serializeObject(catalog.getTable(tablePath));
+            Table table = catalog.getTable(tablePath);
+            if (!StringUtils.isBlank(scanVersion)) {
+                table =
+                        table.copy(
+                                new HashMap<String, String>() {
+                                    {
+                                        put(CoreOptions.SCAN_VERSION.key(), scanVersion);
+                                    }
+                                });
+            }
+            serializedTable = InstantiationUtil.serializeObject(table);
         } catch (Catalog.TableNotExistException e) {
             return null;
         } catch (IOException e) {
