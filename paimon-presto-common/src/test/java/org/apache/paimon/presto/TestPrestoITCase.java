@@ -52,6 +52,7 @@ import com.facebook.presto.tests.DistributedQueryRunner;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -270,6 +271,47 @@ public class TestPrestoITCase {
             writer.write(GenericRow.of(1, BinaryString.fromString("20241103"), 1));
             writer.write(GenericRow.of(2, BinaryString.fromString("20241103"), 2));
             writer.write(GenericRow.of(3, BinaryString.fromString("20241104"), 2));
+            commit.commit(0, writer.prepareCommit(true, 0));
+        }
+
+        // table with map field
+        {
+            Path tablePath = new Path(warehouse, "default.db/t_map");
+            RowType rowType =
+                    new RowType(
+                            Arrays.asList(
+                                    new DataField(0, "i1", new IntType()),
+                                    new DataField(1, "i2", VarCharType.STRING_TYPE),
+                                    new DataField(
+                                            2,
+                                            "i3",
+                                            new MapType(new IntType(), VarCharType.STRING_TYPE))));
+            new SchemaManager(LocalFileIO.create(), tablePath)
+                    .createTable(
+                            new Schema(
+                                    rowType.getFields(),
+                                    ImmutableList.of("i2"),
+                                    ImmutableList.of("i2", "i1"),
+                                    ImmutableMap.of("bucket", "1"),
+                                    ""));
+            FileStoreTable table = FileStoreTableFactory.create(LocalFileIO.create(), tablePath);
+            InnerTableWrite writer = table.newWrite("user");
+            InnerTableCommit commit = table.newCommit("user");
+            writer.write(
+                    GenericRow.of(
+                            1,
+                            BinaryString.fromString("20241103"),
+                            new GenericMap(ImmutableMap.of(1, BinaryString.fromString("1")))));
+            writer.write(
+                    GenericRow.of(
+                            2,
+                            BinaryString.fromString("20241103"),
+                            new GenericMap(ImmutableMap.of(1, BinaryString.fromString("2")))));
+            writer.write(
+                    GenericRow.of(
+                            3,
+                            BinaryString.fromString("20241104"),
+                            new GenericMap(ImmutableMap.of(1, BinaryString.fromString("1")))));
             commit.commit(0, writer.prepareCommit(true, 0));
         }
 
@@ -653,6 +695,33 @@ public class TestPrestoITCase {
     public void testPartitionPushDown5() throws Exception {
         assertThat(sql("SELECT * FROM paimon.default.t6 where upper(i2) = '20241103'"))
                 .isEqualTo("[[1, 20241103, 1], [2, 20241103, 2]]");
+    }
+
+    @DataProvider(name = "subscriptsFilterEnabled")
+    public Object[] subscriptsFilterEnabled() {
+        return new Object[] {"false", "true"};
+    }
+
+    @Test(dataProvider = "subscriptsFilterEnabled")
+    public void testQueryMap(String subscriptsFilterEnabled) throws Exception {
+        assertThat(
+                        sql(
+                                "SELECT * FROM paimon.default.t_map where upper(i2) = '20241103' and i3[1] = '1'",
+                                "range_filters_on_subscripts_enabled",
+                                subscriptsFilterEnabled))
+                .isEqualTo("[[1, 20241103, {1=1}]]");
+        assertThat(
+                        sql(
+                                "SELECT * FROM paimon.default.t_map where i3[1] = '1' or i3[1] = '2'",
+                                "range_filters_on_subscripts_enabled",
+                                subscriptsFilterEnabled))
+                .isEqualTo("[[1, 20241103, {1=1}], [2, 20241103, {1=2}], [3, 20241104, {1=1}]]");
+        assertThat(
+                        sql(
+                                "SELECT * FROM paimon.default.t_map where i3[1] = '1'",
+                                "range_filters_on_subscripts_enabled",
+                                subscriptsFilterEnabled))
+                .isEqualTo("[[1, 20241103, {1=1}], [3, 20241104, {1=1}]]");
     }
 
     private String sql(String sql, String key, String value) throws Exception {
