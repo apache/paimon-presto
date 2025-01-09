@@ -27,12 +27,16 @@ import javax.inject.Inject;
 import java.util.List;
 
 import static com.facebook.presto.spi.session.PropertyMetadata.booleanProperty;
+import static com.facebook.presto.spi.session.PropertyMetadata.stringProperty;
 
 /** Presto {@link PrestoSessionProperties}. */
 public class PrestoSessionProperties {
 
     public static final String QUERY_PUSHDOWN_ENABLED = "query_pushdown_enabled";
     public static final String PARTITION_PRUNE_ENABLED = "partition_prune_enabled";
+    public static final String RANGE_FILTERS_ON_SUBSCRIPTS_ENABLED =
+            "range_filters_on_subscripts_enabled";
+    public static final String SCAN_VERSION = "scan_version";
 
     private final List<PropertyMetadata<?>> sessionProperties;
 
@@ -49,7 +53,13 @@ public class PrestoSessionProperties {
                                 PARTITION_PRUNE_ENABLED,
                                 "Enable paimon query partition prune",
                                 config.isPaimonPartitionPruningEnabled(),
-                                false));
+                                false),
+                        booleanProperty(
+                                RANGE_FILTERS_ON_SUBSCRIPTS_ENABLED,
+                                "Whether to enable pushdown of range filters on subscripts like (a[2] = 5)",
+                                false,
+                                false),
+                        stringProperty(SCAN_VERSION, "Paimon table scan version", null, false));
     }
 
     public List<PropertyMetadata<?>> getSessionProperties() {
@@ -62,5 +72,9 @@ public class PrestoSessionProperties {
 
     public static boolean isPartitionPruneEnabled(ConnectorSession session) {
         return session.getProperty(PARTITION_PRUNE_ENABLED, Boolean.class);
+    }
+
+    public static String getScanVersion(ConnectorSession session) {
+        return session.getProperty(SCAN_VERSION, String.class);
     }
 }

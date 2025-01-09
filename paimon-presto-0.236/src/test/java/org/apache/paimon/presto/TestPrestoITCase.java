@@ -37,6 +37,7 @@ import org.apache.paimon.types.RowKind;
 import org.apache.paimon.types.RowType;
 import org.apache.paimon.types.VarCharType;
 
+import com.facebook.presto.Session;
 import com.facebook.presto.testing.MaterializedResult;
 import com.facebook.presto.testing.QueryRunner;
 import com.facebook.presto.tests.DistributedQueryRunner;
@@ -49,6 +50,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.facebook.airlift.testing.Closeables.closeAllSuppress;
 import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
@@ -212,7 +214,18 @@ public class TestPrestoITCase {
 
     @Test
     public void testFilter() throws Exception {
-        assertThat(sql("SELECT a, aCa FROM paimon.default.t2 WHERE a < 4"))
+        assertThat(sql("SELECT a, aCa FROM paimon.default.t2 WHERE a < 7"))
+                .isEqualTo("[[1, 1], [3, 2], [5, 3]]");
+    }
+
+    @Test
+    public void testFilterWithTimeTravel() throws Exception {
+        // Time travel table t2 to first commit.
+        assertThat(
+                        sql(
+                                "SELECT a, aCa FROM paimon.default.t2 WHERE a < 7",
+                                PrestoSessionProperties.SCAN_VERSION,
+                                "1"))
                 .isEqualTo("[[1, 1], [3, 2]]");
     }
 
@@ -222,6 +235,17 @@ public class TestPrestoITCase {
                         sql(
                                 "SELECT pt, a, SUM(b), SUM(d) FROM paimon.default.t3 GROUP BY pt, a ORDER BY pt, a"))
                 .isEqualTo("[[1, 1, 3, 3], [2, 3, 3, 3]]");
+    }
+
+    private String sql(String sql, String key, String value) throws Exception {
+        Session session =
+                testSessionBuilder().setCatalogSessionProperty("paimon", key, value).build();
+        MaterializedResult result = queryRunner.execute(session, sql);
+        return result.getMaterializedRows().stream()
+                .map(Object::toString)
+                .sorted()
+                .collect(Collectors.toList())
+                .toString();
     }
 
     private String sql(String sql) throws Exception {
