@@ -371,6 +371,33 @@ public class TestPrestoITCase {
     }
 
     @Test
+    public void testFilterWithTimeTravelAndTableOptions() throws Exception {
+        // Time travel table t2 to first commit.
+        assertThat(
+                        sql(
+                                "SELECT a, aCa FROM paimon.default.t2 WHERE a < 7",
+                                PrestoSessionProperties.SCAN_VERSION,
+                                "default.t2.1"))
+                .isEqualTo("[[1, 1], [3, 2]]");
+
+        // Invalid time travel table options
+        assertThat(
+                        sql(
+                                "SELECT a, aCa FROM paimon.default.t2 WHERE a < 7",
+                                PrestoSessionProperties.SCAN_VERSION,
+                                "default.t1.1"))
+                .isEqualTo("[[1, 1], [3, 2], [5, 3]]");
+
+        // Time travel table t2 to first commit by table options
+        assertThat(
+                        sql(
+                                "SELECT a, aCa FROM paimon.default.t2 WHERE a < 7",
+                                PrestoSessionProperties.SCAN_VERSION,
+                                "default.t1.1|default.t2.1"))
+                .isEqualTo("[[1, 1], [3, 2]]");
+    }
+
+    @Test
     public void testGroupByWithCast() throws Exception {
         assertThat(
                         sql(

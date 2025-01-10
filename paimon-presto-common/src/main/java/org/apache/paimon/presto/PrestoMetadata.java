@@ -140,13 +140,19 @@ public class PrestoMetadata implements ConnectorMetadata {
         try {
             Table table = catalog.getTable(tablePath);
             if (!StringUtils.isBlank(scanVersion)) {
+                String tableScanVersion =
+                        PrestoPropertyUtils.getScanVersion(scanVersion, tablePath);
                 table =
-                        table.copy(
-                                new HashMap<String, String>() {
-                                    {
-                                        put(CoreOptions.SCAN_VERSION.key(), scanVersion);
-                                    }
-                                });
+                        StringUtils.isBlank(tableScanVersion)
+                                ? table
+                                : table.copy(
+                                        new HashMap<String, String>() {
+                                            {
+                                                put(
+                                                        CoreOptions.SCAN_VERSION.key(),
+                                                        tableScanVersion);
+                                            }
+                                        });
             }
             serializedTable = InstantiationUtil.serializeObject(table);
         } catch (Catalog.TableNotExistException e) {
