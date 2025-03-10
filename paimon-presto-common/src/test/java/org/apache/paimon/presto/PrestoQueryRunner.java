@@ -60,7 +60,7 @@ public class PrestoQueryRunner {
         queryRunner.installPlugin(new TpchPlugin());
         queryRunner.createCatalog("tpch", "tpch");
 
-        Path dataDir = queryRunner.getCoordinator().getBaseDataDir().resolve("paimon_data");
+        Path dataDir = queryRunner.getCoordinator().getDataDirectory().resolve("paimon_data");
         Path catalogDir = dataDir.getParent().resolve("catalog");
 
         queryRunner.installPlugin(new PrestoPlugin());
